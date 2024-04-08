@@ -1,0 +1,2 @@
+xyz2graph @ git+https://github.com/zotko/xyz2graph.git
+plotly
