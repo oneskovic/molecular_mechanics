@@ -1,11 +1,13 @@
-from torch import Tensor
 import torch
-from atom import Atom, get_bond_angle
+from atom import Atom, get_bond_angle, get_distance
+import typing
+
 
 class HarmonicBondForceParams:
     def __init__(self, l: float, k: float):
         self.l = l
         self.k = k
+
 
 class HarmonicBondForce:
     def __init__(self, bond_dict: dict[tuple, HarmonicBondForceParams]):
@@ -15,7 +17,7 @@ class HarmonicBondForce:
         for bond, params in temp_dict.items():
             self.bond_dict[(bond[1], bond[0])] = params
 
-    def get_force(self, atom1: Atom, atom2: Atom) -> float:
+    def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
         bond = (atom1.element, atom2.element)
         force = torch.tensor(0.0)
         if bond in self.bond_dict:
@@ -24,10 +26,12 @@ class HarmonicBondForce:
             force = k * (dist - l) ** 2 / 2
         return force
 
+
 class HarmonicAngleForceParams:
     def __init__(self, angle: float, k: float):
         self.angle = angle
         self.k = k
+
 
 class HarmonicAngleForce:
     def __init__(self, angle_dict: dict[tuple, HarmonicAngleForceParams]):
@@ -36,46 +40,84 @@ class HarmonicAngleForce:
         temp_dict = angle_dict.copy()
         for angle, params in temp_dict.items():
             self.angle_dict[(angle[2], angle[1], angle[0])] = params
-    
-    def get_force(self, atom1: Atom, atom2: Atom, atom3: Atom) -> float:
+
+    def get_force(self, atom1: Atom, atom2: Atom, atom3: Atom) -> torch.Tensor:
         atoms = (atom1.element, atom2.element, atom3.element)
-        force = torch.tensor(0.0)
-        if atoms in self.angle_dict:
-            angle, k = self.angle_dict[atoms].angle, self.angle_dict[atoms].k
-            current_angle = get_bond_angle(atom1, atom2, atom3)
-            force = k * (current_angle - angle) ** 2 / 2
+        if atoms not in self.angle_dict:
+            return torch.tensor(0.0)
+
+        angle, k = self.angle_dict[atoms].angle, self.angle_dict[atoms].k
+        current_angle = get_bond_angle(atom1, atom2, atom3)
+        force = k * (current_angle - angle) ** 2 / 2
         return force
+
 
 class LennardJonesForceParams:
     def __init__(self, epsilon: float, sigma: float):
+        assert epsilon >= 0
+        assert sigma >= 0
         self.epsilon = epsilon
         self.sigma = sigma
+
 
 class LennardJonesForce:
     def __init__(self, lj_dict: dict[str, LennardJonesForceParams]):
         self.lj_dict = lj_dict
 
-    def get_force(self, atom1: Atom, atom2: Atom) -> float:
-        force = torch.tensor(0.0)
-        if atom1.element in self.lj_dict and atom2.element in self.lj_dict:
-            epsilon1, sigma1 = self.lj_dict[atom1.element].epsilon, self.lj_dict[atom1.element].sigma
-            epsilon2, sigma2 = self.lj_dict[atom2.element].epsilon, self.lj_dict[atom2.element].sigma
-            dist = (atom1.position - atom2.position).norm()
-            sigma = (sigma1 + sigma2) / 2
-            epsilon = (epsilon1 * epsilon2) ** 0.5
+    def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
+        if atom1.element not in self.lj_dict or atom2.element not in self.lj_dict:
+            return torch.tensor(0.0)
 
-            force = 4 * epsilon * ((sigma / dist) ** 12 - (sigma / dist) ** 6)
+        epsilon1, sigma1 = (
+            self.lj_dict[atom1.element].epsilon,
+            self.lj_dict[atom1.element].sigma,
+        )
+        epsilon2, sigma2 = (
+            self.lj_dict[atom2.element].epsilon,
+            self.lj_dict[atom2.element].sigma,
+        )
+        dist = (atom1.position - atom2.position).norm()
+        dist = typing.cast(torch.Tensor, dist)
+        sigma = (sigma1 + sigma2) / 2
+        epsilon = (epsilon1 * epsilon2) ** 0.5
+        epsilon = typing.cast(float, epsilon)
+
+        force = 4 * epsilon * ((sigma / dist) ** 12 - (sigma / dist) ** 6)
         return force
-    
+
+
 class CoulombForce:
     def __init__(self, charge_dict: dict[str, float]):
         self.charge_dict = charge_dict
-    
-    def get_force(self, atom1: Atom, atom2: Atom) -> float:
-        force = torch.tensor(0.0)
-        if atom1.element in self.charge_dict and atom2.element in self.charge_dict:
-            charge1, charge2 = self.charge_dict[atom1.element], self.charge_dict[atom2.element]
-            dist = (atom1.position - atom2.position).norm()
-            k = 8.9875517873681764e9
-            force = k * charge1 * charge2 / dist
+
+    def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
+        if (
+            atom1.element not in self.charge_dict
+            or atom2.element not in self.charge_dict
+        ):
+            return torch.tensor(0.0)
+
+        charge1, charge2 = (
+            self.charge_dict[atom1.element],
+            self.charge_dict[atom2.element],
+        )
+        dist = get_distance(atom1, atom2)
+        k = 8.9875517873681764e9
+        force = k * charge1 * charge2 / dist
         return force
+
+
+class ForceField:
+    def __init__(
+        self,
+        harmonic_bond_forces: HarmonicBondForce | None = None,
+        harmonic_angle_forces: HarmonicAngleForce | None = None,
+        lennard_jones_forces: LennardJonesForce | None = None,
+        coulomb_forces: CoulombForce | None = None,
+        non_bonded_scaling_factor: float | None = None,
+    ):
+        self.harmonic_bond_forces = harmonic_bond_forces
+        self.harmonic_angle_forces = harmonic_angle_forces
+        self.lennard_jones_forces = lennard_jones_forces
+        self.coulomb_forces = coulomb_forces
+        self.non_bonded_scaling_factor = non_bonded_scaling_factor
