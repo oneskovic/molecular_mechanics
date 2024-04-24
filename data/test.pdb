@@ -1,0 +1,164 @@
+HEADER    UNKNOWN FUNCTION                        17-JAN-06   2FQ5              
+TITLE     NMR STRUCTURE OF 2F ASSOCIATED WITH LIPID DISC                        
+COMPND    MOL_ID: 1;                                                            
+COMPND   2 MOLECULE: PEPTIDE 2F;                                                
+COMPND   3 CHAIN: A;                                                            
+COMPND   4 ENGINEERED: YES                                                      
+SOURCE    MOL_ID: 1;                                                            
+SOURCE   2 SYNTHETIC: YES;                                                      
+SOURCE   3 OTHER_DETAILS: THE PEPTIDE IS SYNTHETIC.                             
+KEYWDS    AMPHIPATHIC HELIX, CLASS A HELIX, UNKNOWN FUNCTION                    
+EXPDTA    SOLUTION NMR                                                          
+MDLTYP    MINIMIZED AVERAGE                                                     
+AUTHOR    V.K.MISHRA,G.M.ANANTHARAMAIAH,N.R.KRISHNA                             
+REVDAT   4   09-MAR-22 2FQ5    1       REMARK LINK                              
+REVDAT   3   24-FEB-09 2FQ5    1       VERSN                                    
+REVDAT   2   21-MAR-06 2FQ5    1       JRNL                                     
+REVDAT   1   24-JAN-06 2FQ5    0                                                
+JRNL        AUTH   V.K.MISHRA,G.M.ANANTHARAMAIAH,J.P.SEGREST,M.N.PALGUNACHARI,  
+JRNL        AUTH 2 M.CHADDHA,S.W.SHAM,N.R.KRISHNA                               
+JRNL        TITL   ASSOCIATION OF A MODEL CLASS A (APOLIPOPROTEIN) AMPHIPATHIC  
+JRNL        TITL 2 {ALPHA} HELICAL PEPTIDE WITH LIPID: HIGH RESOLUTION NMR      
+JRNL        TITL 3 STUDIES OF PEPTIDE-LIPID DISCOIDAL COMPLEXES                 
+JRNL        REF    J.BIOL.CHEM.                  V. 281  6511 2006              
+JRNL        REFN                   ISSN 0021-9258                               
+JRNL        PMID   16407255                                                     
+JRNL        DOI    10.1074/JBC.M511475200                                       
+REMARK   2                                                                      
+REMARK   2 RESOLUTION. NOT APPLICABLE.                                          
+REMARK   3                                                                      
+REMARK   3 REFINEMENT.                                                          
+REMARK   3   PROGRAM     : X-PLOR 3.851                                         
+REMARK   3   AUTHORS     : BRUNGER                                              
+REMARK   3                                                                      
+REMARK   3  OTHER REFINEMENT REMARKS: NULL                                      
+REMARK   4                                                                      
+REMARK   4 2FQ5 COMPLIES WITH FORMAT V. 3.30, 13-JUL-11                         
+REMARK 100                                                                      
+REMARK 100 THIS ENTRY HAS BEEN PROCESSED BY RCSB ON 18-JAN-06.                  
+REMARK 100 THE DEPOSITION ID IS D_1000036176.                                   
+REMARK 210                                                                      
+REMARK 210 EXPERIMENTAL DETAILS                                                 
+REMARK 210  EXPERIMENT TYPE                : NMR                                
+REMARK 210  TEMPERATURE           (KELVIN) : 310                                
+REMARK 210  PH                             : 5.5                                
+REMARK 210  IONIC STRENGTH                 : 5MM                                
+REMARK 210  PRESSURE                       : AMBIENT                            
+REMARK 210  SAMPLE CONTENTS                : 3MM PEPTIDE, 5MM PHOSPHATE         
+REMARK 210                                   BUFFER, PH 5.5, 90% H2O, 10% D2O   
+REMARK 210                                                                      
+REMARK 210  NMR EXPERIMENTS CONDUCTED      : 2D NOESY; 2D TOCSY; DQF-COSY       
+REMARK 210  SPECTROMETER FIELD STRENGTH    : 600 MHZ                            
+REMARK 210  SPECTROMETER MODEL             : AVANCE                             
+REMARK 210  SPECTROMETER MANUFACTURER      : BRUKER                             
+REMARK 210                                                                      
+REMARK 210  STRUCTURE DETERMINATION.                                            
+REMARK 210   SOFTWARE USED                 : X-PLOR 3.851                       
+REMARK 210   METHOD USED                   : DISTANCE GEOMETRY, SIMULATED       
+REMARK 210                                   ANNEALING                          
+REMARK 210                                                                      
+REMARK 210 CONFORMERS, NUMBER CALCULATED   : 100                                
+REMARK 210 CONFORMERS, NUMBER SUBMITTED    : 1                                  
+REMARK 210 CONFORMERS, SELECTION CRITERIA  : STRUCTURES WITH THE LEAST          
+REMARK 210                                   RESTRAINT VIOLATIONS               
+REMARK 210                                                                      
+REMARK 210 BEST REPRESENTATIVE CONFORMER IN THIS ENSEMBLE : 1                   
+REMARK 210                                                                      
+REMARK 210 REMARK: THIS STRUCTURE WAS DETERMINED USING STANDARD 2D              
+REMARK 210  HOMONUCLEAR TECHNIQUES.                                             
+REMARK 215                                                                      
+REMARK 215 NMR STUDY                                                            
+REMARK 215 THE COORDINATES IN THIS ENTRY WERE GENERATED FROM SOLUTION           
+REMARK 215 NMR DATA.  PROTEIN DATA BANK CONVENTIONS REQUIRE THAT                
+REMARK 215 CRYST1 AND SCALE RECORDS BE INCLUDED, BUT THE VALUES ON              
+REMARK 215 THESE RECORDS ARE MEANINGLESS.                                       
+REMARK 300                                                                      
+REMARK 300 BIOMOLECULE: 1                                                       
+REMARK 300 SEE REMARK 350 FOR THE AUTHOR PROVIDED AND/OR PROGRAM                
+REMARK 300 GENERATED ASSEMBLY INFORMATION FOR THE STRUCTURE IN                  
+REMARK 300 THIS ENTRY. THE REMARK MAY ALSO PROVIDE INFORMATION ON               
+REMARK 300 BURIED SURFACE AREA.                                                 
+REMARK 350                                                                      
+REMARK 350 COORDINATES FOR A COMPLETE MULTIMER REPRESENTING THE KNOWN           
+REMARK 350 BIOLOGICALLY SIGNIFICANT OLIGOMERIZATION STATE OF THE                
+REMARK 350 MOLECULE CAN BE GENERATED BY APPLYING BIOMT TRANSFORMATIONS          
+REMARK 350 GIVEN BELOW.  BOTH NON-CRYSTALLOGRAPHIC AND                          
+REMARK 350 CRYSTALLOGRAPHIC OPERATIONS ARE GIVEN.                               
+REMARK 350                                                                      
+REMARK 350 BIOMOLECULE: 1                                                       
+REMARK 350 AUTHOR DETERMINED BIOLOGICAL UNIT: MONOMERIC                         
+REMARK 350 APPLY THE FOLLOWING TO CHAINS: A                                     
+REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000            
+REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000            
+REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000            
+REMARK 500                                                                      
+REMARK 500 GEOMETRY AND STEREOCHEMISTRY                                         
+REMARK 500 SUBTOPIC: TORSION ANGLES                                             
+REMARK 500                                                                      
+REMARK 500 TORSION ANGLES OUTSIDE THE EXPECTED RAMACHANDRAN REGIONS:            
+REMARK 500 (M=MODEL NUMBER; RES=RESIDUE NAME; C=CHAIN IDENTIFIER;               
+REMARK 500 SSEQ=SEQUENCE NUMBER; I=INSERTION CODE).                             
+REMARK 500                                                                      
+REMARK 500 STANDARD TABLE:                                                      
+REMARK 500 FORMAT:(10X,I3,1X,A3,1X,A1,I4,A1,4X,F7.2,3X,F7.2)                    
+REMARK 500                                                                      
+REMARK 500 EXPECTED VALUES: GJ KLEYWEGT AND TA JONES (1996). PHI/PSI-           
+REMARK 500 CHOLOGY: RAMACHANDRAN REVISITED. STRUCTURE 4, 1395 - 1400            
+REMARK 500                                                                      
+REMARK 500  M RES CSSEQI        PSI       PHI                                   
+REMARK 500    ALA A  18      -72.38    -39.85                                   
+REMARK 500                                                                      
+REMARK 500 REMARK: NULL                                                         
+REMARK 800                                                                      
+REMARK 800 SITE                                                                 
+REMARK 800 SITE_IDENTIFIER: AC1                                                 
+REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
+REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE ACE A 1                   
+REMARK 800                                                                      
+REMARK 800 SITE_IDENTIFIER: AC2                                                 
+REMARK 800 EVIDENCE_CODE: SOFTWARE                                              
+REMARK 800 SITE_DESCRIPTION: BINDING SITE FOR RESIDUE NH2 A 20                  
+REMARK 900                                                                      
+REMARK 900 RELATED ENTRIES                                                      
+REMARK 900 RELATED ID: 2FQ8   RELATED DB: PDB                                   
+REMARK 900 LOWEST ENERGY 63 STRUCTURES OF THE PEPTIDE 2F ASSOCIATED WITH LIPID  
+REMARK 900 DISC                                                                 
+DBREF  2FQ5 A    1    20  PDB    2FQ5     2FQ5             1     20             
+SEQRES   1 A   20  ACE ASP TRP LEU LYS ALA PHE TYR ASP LYS VAL ALA GLU          
+SEQRES   2 A   20  LYS LEU LYS GLU ALA PHE NH2                                  
+HET    ACE  A   1       6                                                       
+HET    NH2  A  20       3                                                       
+HETNAM     ACE ACETYL GROUP                                                     
+HETNAM     NH2 AMINO GROUP                                                      
+FORMUL   1  ACE    C2 H4 O                                                      
+FORMUL   1  NH2    H2 N                                                         
+HELIX    1   1 ASP A    2  PHE A   19  1                                  18    
+LINK         C   ACE A   1                 N   ASP A   2     1555   1555  1.30  
+LINK         C   PHE A  19                 N   NH2 A  20     1555   1555  1.31  
+SITE     1 AC1  2 TRP A   3  LEU A   4                                          
+SITE     1 AC2  2 LYS A  16  PHE A  19                                          
+CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1          
+ORIGX1      1.000000  0.000000  0.000000        0.00000                         
+ORIGX2      0.000000  1.000000  0.000000        0.00000                         
+ORIGX3      0.000000  0.000000  1.000000        0.00000                         
+SCALE1      1.000000  0.000000  0.000000        0.00000                         
+SCALE2      0.000000  1.000000  0.000000        0.00000                         
+SCALE3      0.000000  0.000000  1.000000        0.00000                         
+HETATM    1  C   ACE A   1     -13.049  -1.638  -0.076  1.00  0.62           C  
+HETATM    2  O   ACE A   1     -11.997  -1.749  -0.679  1.00  0.57           O  
+HETATM    3  CH3 ACE A   1     -14.002  -2.825   0.082  1.00  0.76           C  
+HETATM    4  H1  ACE A   1     -13.743  -3.593  -0.631  1.00  1.28           H  
+HETATM    5  H2  ACE A   1     -15.016  -2.498  -0.093  1.00  1.29           H  
+HETATM    6  H3  ACE A   1     -13.920  -3.221   1.084  1.00  1.30           H  
+ATOM      7  N   ASP A   2     -13.404  -0.503   0.460  1.00  0.61           N  
+ATOM      8  CA  ASP A   2     -12.513   0.680   0.335  1.00  0.54           C  
+ATOM      9  C   ASP A   2     -11.265   0.471   1.171  1.00  0.43           C  
+ATOM     10  O   ASP A   2     -10.207   0.982   0.863  1.00  0.37           O  
+ATOM     11  CB  ASP A   2     -13.330   1.866   0.849  1.00  0.68           C  
+ATOM     12  CG  ASP A   2     -12.437   3.106   0.925  1.00  1.12           C  
+ATOM     13  OD1 ASP A   2     -11.824   3.308   1.959  1.00  1.79           O  
+ATOM     14  OD2 ASP A   2     -12.383   3.833  -0.054  1.00  1.88           O  
+ATOM     15  H   ASP A   2     -14.249  -0.429   0.942  1.00  0.70           H  
+ATOM     16  HA  ASP A   2     -12.240   0.828  -0.688  1.00  0.54           H  
+ATOM     17  HB2 ASP A   2     -14.153   2.054   0.176  1.00  1.14           H  
+ATOM     18  HB3 ASP A   2     -13.713   1.640   1.833  1.00  1.21           H  
