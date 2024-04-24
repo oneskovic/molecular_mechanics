@@ -1,5 +1,5 @@
 import torch
-from atom import Atom, get_bond_angle, get_distance
+from atom import Atom, get_bond_angle, get_dihedral_angle, get_distance
 import typing
 
 
@@ -49,6 +49,40 @@ class HarmonicAngleForce:
         angle, k = self.angle_dict[atoms].angle, self.angle_dict[atoms].k
         current_angle = get_bond_angle(atom1, atom2, atom3)
         force = k * (current_angle - angle) ** 2 / 2
+        return force
+
+
+class DihedralForceParams:
+    def __init__(self, k: float, n: int, phi: float):
+        self.k = k
+        self.n = n
+        self.phi = phi
+
+
+class DihedralForce:
+    def __init__(self, dihedral_dict: dict[tuple, DihedralForceParams]):
+        self.dihedral_dict = dihedral_dict
+        # Add reverse dihedrals
+        temp_dict = dihedral_dict.copy()
+        for dihedral, params in temp_dict.items():
+            self.dihedral_dict[(dihedral[3], dihedral[2], dihedral[1], dihedral[0])] = (
+                params
+            )
+
+    def get_force(
+        self, atom1: Atom, atom2: Atom, atom3: Atom, atom4: Atom
+    ) -> torch.Tensor:
+        atoms = (atom1.element, atom2.element, atom3.element, atom4.element)
+        if atoms not in self.dihedral_dict:
+            return torch.tensor(0.0)
+
+        k, n, phi = (
+            self.dihedral_dict[atoms].k,
+            self.dihedral_dict[atoms].n,
+            self.dihedral_dict[atoms].phi,
+        )
+        angle = get_dihedral_angle(atom1, atom2, atom3, atom4)
+        force = k * (1 + torch.cos(n * angle - phi))
         return force
 
 
@@ -112,12 +146,14 @@ class ForceField:
         self,
         harmonic_bond_forces: HarmonicBondForce | None = None,
         harmonic_angle_forces: HarmonicAngleForce | None = None,
+        dihedral_forces: DihedralForce | None = None,
         lennard_jones_forces: LennardJonesForce | None = None,
         coulomb_forces: CoulombForce | None = None,
         non_bonded_scaling_factor: float | None = None,
     ):
         self.harmonic_bond_forces = harmonic_bond_forces
         self.harmonic_angle_forces = harmonic_angle_forces
+        self.dihedral_forces = dihedral_forces
         self.lennard_jones_forces = lennard_jones_forces
         self.coulomb_forces = coulomb_forces
         self.non_bonded_scaling_factor = non_bonded_scaling_factor

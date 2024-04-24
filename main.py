@@ -21,21 +21,23 @@ atoms = [
     Atom("H", torch.tensor([0.0, 0.0, 1], requires_grad=True), 1.0),
 ]
 force_field = ForceField(
-    HarmonicBondForce({("O", "H"): HarmonicBondForceParams(0.09572, 462750.4)}),
-    HarmonicAngleForce(
+    harmonic_bond_forces=HarmonicBondForce(
+        {("O", "H"): HarmonicBondForceParams(0.09572, 462750.4)}
+    ),
+    harmonic_angle_forces=HarmonicAngleForce(
         {("H", "O", "H"): HarmonicAngleForceParams(1.82421813418, 836.8)}
     ),
-    LennardJonesForce(
+    lennard_jones_forces=LennardJonesForce(
         {
             "H": LennardJonesForceParams(0.0, 1.0),
             "O": LennardJonesForceParams(0.635968, 0.31507524065751241),
         }
     ),
-    CoulombForce({"H": 0.417, "O": -0.834}),
+    coulomb_forces=CoulombForce({"H": 0.417, "O": -0.834}),
 )
 connections = [[1], [0, 2], [1]]
 
-iterations = 2000
+iterations = 5000
 system = System(atoms, connections, force_field)
 positions = [atom.position for atom in system.atoms]
 optimizer = Adam(positions)

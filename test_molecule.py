@@ -1,4 +1,12 @@
-from molecule import get_all_bonds, get_all_pairs_bond_separation
+from molecule import (
+    get_all_angles,
+    get_all_bonds,
+    get_all_dihedrals,
+    get_all_pairs_bond_separation,
+)
+
+from collections import Counter
+
 import pytest
 
 
@@ -22,17 +30,35 @@ def test_get_all_pairs_bond_separation(graph):
 
 
 def test_get_all_bonds(graph):
-    assert get_all_bonds(graph) == [
-        (0, 1),
-        (0, 5),
-        (1, 0),
-        (1, 2),
-        (2, 1),
-        (2, 3),
-        (2, 4),
-        (3, 2),
-        (4, 2),
-        (5, 0),
-        (6, 7),
-        (7, 6),
-    ]
+    assert Counter(get_all_bonds(graph)) == Counter(
+        [
+            (0, 1),
+            (0, 5),
+            (1, 2),
+            (2, 3),
+            (2, 4),
+            (6, 7),
+        ]
+    )
+
+
+def test_get_all_angles(graph):
+    assert Counter(get_all_angles(graph)) == Counter(
+        [
+            (1, 0, 5),
+            (0, 1, 2),
+            (1, 2, 3),
+            (1, 2, 4),
+            (3, 2, 4),
+        ]
+    )
+
+
+def test_get_all_dihedrals(graph):
+    assert Counter(get_all_dihedrals(graph)) == Counter(
+        [
+            (5, 0, 1, 2),
+            (0, 1, 2, 3),
+            (0, 1, 2, 4),
+        ]
+    )
