@@ -1,5 +1,5 @@
-from xyz2graph import MolGraph, to_plotly_figure
 from plotly.offline import offline
+from xyz2graph import MolGraph, to_plotly_figure
 
 # Create the MolGraph object
 mg = MolGraph()

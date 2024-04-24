@@ -1,19 +1,18 @@
-from atom import Atom
-from forces import (
-    ForceField,
-    HarmonicBondForce,
-    HarmonicBondForceParams,
-    HarmonicAngleForce,
-    HarmonicAngleForceParams,
-    LennardJonesForce,
-    LennardJonesForceParams,
-    CoulombForce,
-)
-from system import System
-
 import torch
 from torch.optim import Adam
 
+from molecular_mechanics.atom import Atom
+from molecular_mechanics.forces import (
+    CoulombForce,
+    ForceField,
+    HarmonicAngleForce,
+    HarmonicAngleForceParams,
+    HarmonicBondForce,
+    HarmonicBondForceParams,
+    LennardJonesForce,
+    LennardJonesForceParams,
+)
+from molecular_mechanics.system import System
 
 atoms = [
     Atom("H", torch.tensor([0.0, 1, 0.0], requires_grad=True), 1.0),

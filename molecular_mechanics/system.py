@@ -1,17 +1,22 @@
-from atom import Atom, get_bond_angle, get_dihedral_angle, get_distance
-from forces import ForceField
-from molecule import (
+import itertools
+
+import torch
+from torch import Tensor
+
+from molecular_mechanics.atom import (
+    Atom,
+    get_bond_angle,
+    get_dihedral_angle,
+    get_distance,
+)
+from molecular_mechanics.forces import ForceField
+from molecular_mechanics.molecule import (
     Graph,
     get_all_angles,
     get_all_bonds,
     get_all_dihedrals,
     get_all_pairs_bond_separation,
 )
-
-import itertools
-
-from torch import Tensor
-import torch
 
 
 class System:
@@ -33,7 +38,7 @@ class System:
 
         # Cached total energy to avoid recomputation
         # Should be invalidated by setting it to None when the system changes.
-        self.total_energy = None
+        self.total_energy: Tensor | None = None
 
     def get_bonds_energy(self) -> Tensor:
         harmonic_bond_forces = self.force_field.harmonic_bond_forces
@@ -86,9 +91,13 @@ class System:
             lj = (
                 lennard_jones_forces.get_force(atom1, atom2)
                 if lennard_jones_forces
-                else 0
+                else torch.tensor(0)
             )
-            coulomb = coulomb_forces.get_force(atom1, atom2) if coulomb_forces else 0
+            coulomb = (
+                coulomb_forces.get_force(atom1, atom2)
+                if coulomb_forces
+                else torch.tensor(0)
+            )
             # Nonbonded interactions are only calculated between atoms in
             # different molecules or for atoms in the same molecule separated
             # by at least three bonds. Those non-bonded interactions separated
@@ -113,7 +122,7 @@ class System:
         self.total_energy = total_energy
         return total_energy
 
-    def print_state(self):
+    def print_state(self) -> None:
         description_width = 25
         value_width = 20
         precision = 6
@@ -145,24 +154,24 @@ class System:
             atom2_str = f"{atom2.element}{j}"
             atom3_str = f"{atom3.element}{k}"
             description = f"Angle {atom1_str}-{atom2_str}-{atom3_str}:"
-            angle = get_bond_angle(atom1, atom2, atom3)
-            desc_val_dict[description] = angle.item()
+            angle_val = get_bond_angle(atom1, atom2, atom3)
+            desc_val_dict[description] = angle_val.item()
 
         for dihedral in self.dihedrals:
-            i, j, k, l = dihedral
+            i, j, k, m = dihedral
             atom1, atom2, atom3, atom4 = (
                 self.atoms[i],
                 self.atoms[j],
                 self.atoms[k],
-                self.atoms[l],
+                self.atoms[m],
             )
             atom1_str = f"{atom1.element}{i}"
             atom2_str = f"{atom2.element}{j}"
             atom3_str = f"{atom3.element}{k}"
-            atom4_str = f"{atom4.element}{l}"
+            atom4_str = f"{atom4.element}{m}"
             description = f"Dihedral {atom1_str}-{atom2_str}-{atom3_str}-{atom4_str}:"
-            angle = get_dihedral_angle(atom1, atom2, atom3, atom4)
-            desc_val_dict[description] = angle.item()
+            angle_val = get_dihedral_angle(atom1, atom2, atom3, atom4)
+            desc_val_dict[description] = angle_val.item()
 
         for description, value in desc_val_dict.items():
             print(

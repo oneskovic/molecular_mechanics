@@ -1,13 +1,13 @@
-from molecule import (
+from collections import Counter
+
+import pytest
+
+from molecular_mechanics.molecule import (
     get_all_angles,
     get_all_bonds,
     get_all_dihedrals,
     get_all_pairs_bond_separation,
 )
-
-from collections import Counter
-
-import pytest
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
-from atom import Atom, get_bond_angle
-
 import torch
 from pytest import approx
+
+from molecular_mechanics.atom import Atom, get_bond_angle
 
 
 def test_bond_angle():

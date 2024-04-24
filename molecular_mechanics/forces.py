@@ -1,11 +1,18 @@
-import torch
-from atom import Atom, get_bond_angle, get_dihedral_angle, get_distance
 import typing
+
+import torch
+
+from molecular_mechanics.atom import (
+    Atom,
+    get_bond_angle,
+    get_dihedral_angle,
+    get_distance,
+)
 
 
 class HarmonicBondForceParams:
-    def __init__(self, l: float, k: float):
-        self.l = l
+    def __init__(self, length: float, k: float):
+        self.length = length
         self.k = k
 
 
@@ -21,9 +28,9 @@ class HarmonicBondForce:
         bond = (atom1.element, atom2.element)
         force = torch.tensor(0.0)
         if bond in self.bond_dict:
-            l, k = self.bond_dict[bond].l, self.bond_dict[bond].k
+            length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
             dist = (atom1.position - atom2.position).norm()
-            force = k * (dist - l) ** 2 / 2
+            force = k * (dist - length) ** 2 / 2
         return force
 
 
@@ -65,9 +72,9 @@ class DihedralForce:
         # Add reverse dihedrals
         temp_dict = dihedral_dict.copy()
         for dihedral, params in temp_dict.items():
-            self.dihedral_dict[(dihedral[3], dihedral[2], dihedral[1], dihedral[0])] = (
-                params
-            )
+            self.dihedral_dict[
+                (dihedral[3], dihedral[2], dihedral[1], dihedral[0])
+            ] = params
 
     def get_force(
         self, atom1: Atom, atom2: Atom, atom3: Atom, atom4: Atom
