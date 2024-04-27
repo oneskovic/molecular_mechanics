@@ -19,6 +19,26 @@ from molecular_mechanics.molecule import (
     get_all_pairs_bond_separation,
 )
 
+class _PotentialEnergyCache:
+    def __init__(self):
+        self._atoms_positions_hash = None
+        self._energy = None
+
+    
+    def _get_positions_hash(self, atoms: list[Atom]) -> int:
+        position_tensor = torch.stack([atom.position for atom in atoms])
+        return hash(tuple(position_tensor.flatten().tolist()))
+    
+
+    def update(self, atoms: list[Atom], energy: Tensor) -> None:
+        self._atoms_positions_hash = self._get_positions_hash(atoms)
+        self._energy = energy
+
+
+    def get_energy(self, atoms: list[Atom]) -> Tensor | None:
+        if self._atoms_positions_hash != self._get_positions_hash(atoms):
+            return None
+        return self._energy
 
 class System:
     def __init__(
@@ -42,13 +62,7 @@ class System:
         if self.temperature is not None:
             self.velocities = self.initialize_velocities(temperature)
 
-        # Energy is cached in this variable after it is calculated
-        # Subsequent calls to get_total_energy will return this value
-        # Should be invalidated by setting it to None whenever the positions
-        # of the atoms are changed
-        # TODO: Invalidate the cached total energy automatically in a 
-        # property setter for self.atoms
-        self.potential_energy: Tensor | None = None
+        self._potential_energy_cache = _PotentialEnergyCache()
 
     def initialize_velocities(self, temperature):
         """
@@ -138,16 +152,16 @@ class System:
         return total_energy
 
     def get_potential_energy(self) -> Tensor:
-        # Return the cached total energy if it exists
-        if self.potential_energy is not None:
-            return self.potential_energy
+        cached_energy = self._potential_energy_cache.get_energy(self.atoms)
+        if cached_energy is not None:
+            return cached_energy
         
         total_energy = torch.tensor(0.0)
         total_energy += self.get_bonds_energy()
         total_energy += self.get_angles_energy()
         total_energy += self.get_dihedrals_energy()
         total_energy += self.get_non_bonded_energy()
-        self.potential_energy = total_energy
+        self._potential_energy_cache.update(self.atoms, total_energy)
         return total_energy
     
     def get_kinetic_energy(self) -> Tensor:
@@ -167,8 +181,8 @@ class System:
 
         desc_val_dict: dict[str, float] = {}
 
-        self.potential_energy = self.get_potential_energy()
-        desc_val_dict["Total energy"] = self.potential_energy.item()
+        potential_energy = self.get_potential_energy()
+        desc_val_dict["Total energy"] = potential_energy.item()
 
         # FIXME: Duplicate code from get_bonds_energy
         for bond in self.bonds:

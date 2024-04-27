@@ -37,7 +37,7 @@ force_field = ForceField(
     coulomb_forces=CoulombForce({"H": 0.417, "O": -0.834}),
 )
 connections = [[1], [0, 2], [1]]
-system = System(atoms, connections, force_field, temperature=0.0)
+system = System(atoms, connections, force_field, temperature=300.0)
 
 def minimize_energy(system: System, iterations: int):
     positions = [atom.position for atom in system.atoms]
@@ -50,12 +50,10 @@ def minimize_energy(system: System, iterations: int):
         energy = system.get_potential_energy()
         energy.backward()
         optimizer.step()
-        # Invalidate the cached total energy
-        system.potential_energy = None
         optimizer.zero_grad()
 
 def dynamics(system: System, iterations: int):
-    integrator = VerletIntegrator(system, timestep=0.00001)
+    integrator = VerletIntegrator(system, timestep=0.0001)
     print_freq = 100
     total_energy = []
     potential_energy = []
@@ -99,4 +97,4 @@ def dynamics(system: System, iterations: int):
     plt.show()
 
 if __name__ == "__main__":
-    dynamics(system, 10000)
+    dynamics(system, 1000)
