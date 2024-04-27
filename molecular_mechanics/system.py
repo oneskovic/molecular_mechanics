@@ -9,6 +9,7 @@ from molecular_mechanics.atom import (
     get_dihedral_angle,
     get_distance,
 )
+from molecular_mechanics.constants import BOLTZMANN
 from molecular_mechanics.forces import ForceField
 from molecular_mechanics.molecule import (
     Graph,
@@ -25,10 +26,12 @@ class System:
         atoms: list[Atom],
         connections: Graph,
         force_field: ForceField,
+        temperature: float | None = None,
     ):
         self.atoms = atoms
         self.connections = connections
         self.force_field = force_field
+        self.temperature = temperature
 
         # Precomputed properties of the system
         self.bonds = get_all_bonds(connections)
@@ -36,9 +39,30 @@ class System:
         self.dihedrals = get_all_dihedrals(connections)
         self.all_pairs_bond_separation = get_all_pairs_bond_separation(connections)
 
-        # Cached total energy to avoid recomputation
-        # Should be invalidated by setting it to None when the system changes.
-        self.total_energy: Tensor | None = None
+        if self.temperature is not None:
+            self.velocities = self.initialize_velocities(temperature)
+
+        # Energy is cached in this variable after it is calculated
+        # Subsequent calls to get_total_energy will return this value
+        # Should be invalidated by setting it to None whenever the positions
+        # of the atoms are changed
+        # TODO: Invalidate the cached total energy automatically in a 
+        # property setter for self.atoms
+        self.potential_energy: Tensor | None = None
+
+    def initialize_velocities(self, temperature):
+        """
+        Initialize velocities for the atoms in the system
+        according to the Maxwell-Boltzmann distribution.
+        """
+
+        # TODO: Verify that this is the correct way to initialize velocities
+        mass = torch.tensor([atom.mass for atom in self.atoms])
+        vx = torch.normal(mean=0, std=torch.sqrt(BOLTZMANN * temperature / mass))
+        vy = torch.normal(mean=0, std=torch.sqrt(BOLTZMANN * temperature / mass))
+        vz = torch.normal(mean=0, std=torch.sqrt(BOLTZMANN * temperature / mass))
+        return torch.stack([vx, vy, vz], dim=1)
+
 
     def get_bonds_energy(self) -> Tensor:
         harmonic_bond_forces = self.force_field.harmonic_bond_forces
@@ -113,14 +137,23 @@ class System:
                 total_energy += coulomb
         return total_energy
 
-    def get_total_energy(self) -> Tensor:
+    def get_potential_energy(self) -> Tensor:
+        # Return the cached total energy if it exists
+        if self.potential_energy is not None:
+            return self.potential_energy
+        
         total_energy = torch.tensor(0.0)
         total_energy += self.get_bonds_energy()
         total_energy += self.get_angles_energy()
         total_energy += self.get_dihedrals_energy()
         total_energy += self.get_non_bonded_energy()
-        self.total_energy = total_energy
+        self.potential_energy = total_energy
         return total_energy
+    
+    def get_kinetic_energy(self) -> Tensor:
+        mass = torch.tensor([atom.mass for atom in self.atoms])
+        velocity_norms = self.velocities.norm(dim=1)
+        return 0.5 * (mass * velocity_norms ** 2).sum()
 
     def print_state(self) -> None:
         description_width = 25
@@ -134,9 +167,8 @@ class System:
 
         desc_val_dict: dict[str, float] = {}
 
-        if self.total_energy is None:
-            self.total_energy = self.get_total_energy()
-        desc_val_dict["Total energy"] = self.total_energy.item()
+        self.potential_energy = self.get_potential_energy()
+        desc_val_dict["Total energy"] = self.potential_energy.item()
 
         # FIXME: Duplicate code from get_bonds_energy
         for bond in self.bonds:

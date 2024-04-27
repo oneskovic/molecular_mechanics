@@ -8,6 +8,7 @@ from molecular_mechanics.atom import (
     get_dihedral_angle,
     get_distance,
 )
+from molecular_mechanics.constants import COULOMB
 
 
 class HarmonicBondForceParams:
@@ -143,8 +144,7 @@ class CoulombForce:
             self.charge_dict[atom2.element],
         )
         dist = get_distance(atom1, atom2)
-        k = 8.9875517873681764e9
-        force = k * charge1 * charge2 / dist
+        force = COULOMB * charge1 * charge2 / dist
         return force
 
 
