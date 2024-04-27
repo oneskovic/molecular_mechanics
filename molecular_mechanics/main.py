@@ -14,6 +14,7 @@ from molecular_mechanics.forces import (
     LennardJonesForceParams,
 )
 from molecular_mechanics.integration import VerletIntegrator
+from molecular_mechanics.logging import print_system_state
 from molecular_mechanics.system import System
 
 atoms = [
@@ -46,7 +47,7 @@ def minimize_energy(system: System, iterations: int):
     for i in range(iterations):
         if i % 100 == 0:
             print(f"Iteration {i}")
-            system.print_state()
+            print_system_state(system)
         energy = system.get_potential_energy()
         energy.backward()
         optimizer.step()
@@ -72,7 +73,7 @@ def dynamics(system: System, iterations: int):
         bond_length23.append(get_distance(system.atoms[1], system.atoms[2]).item())
         if i % print_freq == 0:
             print(f"Iteration {i}")
-            system.print_state()
+            print_system_state(system)
         integrator.step()
     
 
