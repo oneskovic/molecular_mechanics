@@ -32,6 +32,8 @@ class HarmonicBondForce:
         if bond in self.bond_dict:
             length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
             dist = (atom1.position - atom2.position).norm()
+            k /= 1000.0
+            length *= 10.0
             force = k * (dist - length) ** 2 / 2
         return force
 

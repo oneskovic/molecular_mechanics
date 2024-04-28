@@ -2,10 +2,10 @@ import xml.etree.ElementTree as ET
 from molecular_mechanics.forces import HarmonicBondForceParams, HarmonicAngleForceParams, LennardJonesForceParams
 from molecular_mechanics.forces import HarmonicBondForce, HarmonicAngleForce, LennardJonesForce, CoulombForce
 from molecular_mechanics.forces import ForceField
-from molecular_mechanics.residue_database import ff14sb_residue_database
+from molecular_mechanics.residue_database import load_residue_database
 from molecular_mechanics.atom import AtomType
 
-def ff14sb_forcefield(forcefield_file = 'data/tip3p.xml') -> ForceField:
+def load_forcefield(forcefield_file = 'data/ff14SB.xml') -> ForceField:
     tree = ET.parse(forcefield_file)
     atom_types = []
     # Load atom masses
@@ -47,7 +47,7 @@ def ff14sb_forcefield(forcefield_file = 'data/tip3p.xml') -> ForceField:
     harmonic_angle_force = HarmonicAngleForce(harmonic_angle_force_dict)
     lennard_jones_force = LennardJonesForce(lennard_jones_force_dict)
     coulomb_force = CoulombForce()
-    residue_db = ff14sb_residue_database(forcefield_file)
+    residue_db = load_residue_database(forcefield_file)
 
     return ForceField(residue_db, atom_types, 
                       harmonic_bond_forces=harmonic_bond_force, 

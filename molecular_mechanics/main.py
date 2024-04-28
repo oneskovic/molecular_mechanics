@@ -1,15 +1,14 @@
-import torch
 from torch.optim import Adam
 from matplotlib import pyplot as plt
-from molecular_mechanics.forcefield_parser import ff14sb_forcefield
+from molecular_mechanics.forcefield_parser import load_forcefield
 from molecular_mechanics.atom import Atom, get_bond_angle, get_distance
 from molecular_mechanics.integration import VerletIntegrator
 from molecular_mechanics.system import System
 from molecular_mechanics.pdb_parser import atoms_and_bonds_from_pdb
 
-force_field = ff14sb_forcefield()
+force_field = load_forcefield('data/tip3p.xml')
 atoms, connections = atoms_and_bonds_from_pdb("data/vodica.pdb", force_field)
-system = System(atoms, connections, force_field, temperature=0.0)
+system = System(atoms, connections, force_field, temperature=300.0)
 
 def minimize_energy(system: System, iterations: int):
     positions = [atom.position for atom in system.atoms]
@@ -27,7 +26,7 @@ def minimize_energy(system: System, iterations: int):
         optimizer.zero_grad()
 
 def dynamics(system: System, iterations: int):
-    integrator = VerletIntegrator(system, timestep=0.00001)
+    integrator = VerletIntegrator(system)
     print_freq = 100
     total_energy = []
     potential_energy = []
@@ -41,7 +40,7 @@ def dynamics(system: System, iterations: int):
         total_energy.append((p + k).item())
         potential_energy.append(p.item())
         kinetic_energy.append(k.item())
-        #bond_angle.append(get_bond_angle(*system.atoms).item())
+        bond_angle.append(get_bond_angle(*system.atoms).item())
         bond_length12.append(get_distance(system.atoms[0], system.atoms[1]).item())
         bond_length23.append(get_distance(system.atoms[1], system.atoms[2]).item())
         if i % print_freq == 0:

@@ -56,6 +56,8 @@ class System:
         according to the Maxwell-Boltzmann distribution.
         """
 
+        torch.manual_seed(0)
+
         # TODO: Verify that this is the correct way to initialize velocities
         mass = torch.tensor([atom.atom_type.mass for atom in self.atoms])
         vx = torch.normal(mean=0, std=torch.sqrt(BOLTZMANN * temperature / mass))
