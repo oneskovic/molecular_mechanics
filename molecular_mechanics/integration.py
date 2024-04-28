@@ -22,7 +22,7 @@ class VerletIntegrator:
 
     def _get_acceleration(self) -> Tensor:
         def is_valid_grad(grad_list: list[Tensor | None]) -> TypeGuard[list[Tensor]]:
-            return all(grad is not None for grad in grad_list)
+            return all(grad is not None and not torch.isnan(grad).any() for grad in grad_list)
         potential_energy = self.system.get_potential_energy()
         grads_list = [atom.position.grad for atom in self.system.atoms]
         if not is_valid_grad(grads_list):
