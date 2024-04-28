@@ -8,7 +8,7 @@ from molecular_mechanics.system import System
 from molecular_mechanics.pdb_parser import atoms_and_bonds_from_pdb
 
 force_field = ff14sb_forcefield()
-atoms, connections = atoms_and_bonds_from_pdb("data/test.pdb", force_field)
+atoms, connections = atoms_and_bonds_from_pdb("data/vodica.pdb", force_field)
 system = System(atoms, connections, force_field, temperature=0.0)
 
 def minimize_energy(system: System, iterations: int):

@@ -14,11 +14,10 @@ class ResidueDatabase:
     def get_charge(self, residue, atom_name):
         return self.residues[residue].atom_charges[atom_name]
         
-def ff14sb_residue_database(forcefield_file = 'data/ff14SB.xml') -> ResidueDatabase:
+def ff14sb_residue_database(forcefield_file = 'data/tip3p.xml') -> ResidueDatabase:
     tree = ET.parse(forcefield_file)
-    root = tree.getroot()
     residues = {}
-    for residue in root[2]:
+    for residue in tree.findall('Residues/Residue'):
         name = residue.attrib['name']
         atom_charges = {}
         bonds = []

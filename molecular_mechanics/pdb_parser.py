@@ -23,10 +23,9 @@ def atoms_and_bonds_from_pdb(file_path: str, forcefield : ForceField) -> tuple[l
                 position = torch.tensor([float(tokens[6]), float(tokens[7]), float(tokens[8])], requires_grad=True)
                 charge = forcefield.residue_database.get_charge(residue, atom_name)
                 
-                element = atom_name[0] # First character of the atom name is the element
-                atom_mass = forcefield.atom_masses[element]
-
-                atoms.append(Atom(atom_name, charge, position, atom_mass))
+                element = tokens[-1]
+                atom_type = [atom_type for atom_type in forcefield.atom_types if atom_type.element == element][0]
+                atoms.append(Atom(atom_name, charge, position, atom_type))
 
     # TODO: Connection data can be read from the pdb by looking at bonds in the residues, order of amino acids and connect records
 
@@ -42,7 +41,7 @@ def atoms_and_bonds_from_pdb(file_path: str, forcefield : ForceField) -> tuple[l
     G = to_networkx_graph(mg)
     adjacency_list = [list(G.neighbors(n)) for n in G.nodes]
 
-    # There seems to be a bug in this library that sometimes returns adjacency list where an atom is
+    # There seems to be a bug in this library that sometimes returns an adjacency list where an atom is
     # connected to itself. We need to remove those
     for i in range(len(adjacency_list)):
         adjacency_list[i] = [j for j in adjacency_list[i] if j != i]

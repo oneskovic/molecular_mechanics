@@ -10,6 +10,7 @@ from molecular_mechanics.atom import (
 )
 from molecular_mechanics.constants import COULOMB
 from molecular_mechanics.residue_database import ResidueDatabase
+from molecular_mechanics.atom import AtomType
 
 class HarmonicBondForceParams:
     def __init__(self, length: float, k: float):
@@ -26,19 +27,8 @@ class HarmonicBondForce:
             self.bond_dict[(bond[1], bond[0])] = params
 
     def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
-        bond = (atom1.element, atom2.element)
+        bond = (atom1.atom_type.atom_class, atom2.atom_type.atom_class)
         force = torch.tensor(0.0)
-        # Try to find similar bond that does exist (for example c - ch3 does not exist but c-c does)
-        if bond not in self.bond_dict:
-            element1 = atom1.element[0]
-            element2 = atom2.element[0]
-            # Try replacing only one element first
-            if (element1, atom2.element) in self.bond_dict:
-                bond = (element1, atom2.element)
-            elif (atom1.element, element2) in self.bond_dict:
-                bond = (atom1.element, element2)
-            else: # Try replacing both elements
-                bond = (element1, element2)
         if bond in self.bond_dict:
             length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
             dist = (atom1.position - atom2.position).norm()
@@ -61,7 +51,7 @@ class HarmonicAngleForce:
             self.angle_dict[(angle[2], angle[1], angle[0])] = params
 
     def get_force(self, atom1: Atom, atom2: Atom, atom3: Atom) -> torch.Tensor:
-        atoms = (atom1.element, atom2.element, atom3.element)
+        atoms = (atom1.atom_type.atom_class, atom2.atom_type.atom_class, atom3.atom_type.atom_class)
         if atoms not in self.angle_dict:
             return torch.tensor(0.0)
 
@@ -157,7 +147,7 @@ class ForceField:
     def __init__(
         self,
         residue_database: ResidueDatabase,
-        atom_masses: dict[str, float],
+        atom_types: list[AtomType],
         harmonic_bond_forces: HarmonicBondForce | None = None,
         harmonic_angle_forces: HarmonicAngleForce | None = None,
         dihedral_forces: DihedralForce | None = None,
@@ -166,7 +156,7 @@ class ForceField:
         non_bonded_scaling_factor: float | None = None,
     ):
         self.residue_database = residue_database
-        self.atom_masses = atom_masses
+        self.atom_types = atom_types
         self.harmonic_bond_forces = harmonic_bond_forces
         self.harmonic_angle_forces = harmonic_angle_forces
         self.dihedral_forces = dihedral_forces

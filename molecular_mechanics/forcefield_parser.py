@@ -3,20 +3,22 @@ from molecular_mechanics.forces import HarmonicBondForceParams, HarmonicAngleFor
 from molecular_mechanics.forces import HarmonicBondForce, HarmonicAngleForce, LennardJonesForce, CoulombForce
 from molecular_mechanics.forces import ForceField
 from molecular_mechanics.residue_database import ff14sb_residue_database
+from molecular_mechanics.atom import AtomType
 
-def ff14sb_forcefield(forcefield_file = 'data/ff14SB.xml') -> ForceField:
+def ff14sb_forcefield(forcefield_file = 'data/tip3p.xml') -> ForceField:
     tree = ET.parse(forcefield_file)
-    root = tree.getroot()
-    masses = dict()
+    atom_types = []
     # Load atom masses
-    for child in root[1]:
-        element_name = child.attrib['name']
-        element_mass = child.attrib['mass']
-        masses[element_name] = float(element_mass)
+    for child in tree.findall('AtomTypes/Type'):
+        element = child.attrib['element']
+        name = child.attrib['name']
+        mass = float(child.attrib['mass'])
+        element_class = child.attrib['class']
+        atom_types.append(AtomType(element, name, element_class, mass))
     
     harmonic_force_dict = dict()
     # Load the harmonic bond force
-    for child in root[3]:
+    for child in tree.findall('HarmonicBondForce/Bond'):
         type1 = child.attrib['type1']
         type2 = child.attrib['type2']
         length = float(child.attrib['length'])
@@ -25,7 +27,7 @@ def ff14sb_forcefield(forcefield_file = 'data/ff14SB.xml') -> ForceField:
     
     harmonic_angle_force_dict = dict()
     # Load the harmonic angle force
-    for child in root[4]:
+    for child in tree.findall('HarmonicAngleForce/Angle'):
         type1 = child.attrib['type1']
         type2 = child.attrib['type2']
         type3 = child.attrib['type3']
@@ -35,7 +37,7 @@ def ff14sb_forcefield(forcefield_file = 'data/ff14SB.xml') -> ForceField:
     
     lennard_jones_force_dict = dict()
     # Load the lennard jones force
-    for child in root[6][1:]:
+    for child in tree.findall('NonbondedForce/Atom'):
         type = child.attrib['type']
         sigma = float(child.attrib['sigma'])
         epsilon = float(child.attrib['epsilon'])
@@ -47,7 +49,7 @@ def ff14sb_forcefield(forcefield_file = 'data/ff14SB.xml') -> ForceField:
     coulomb_force = CoulombForce()
     residue_db = ff14sb_residue_database(forcefield_file)
 
-    return ForceField(residue_db, masses, 
+    return ForceField(residue_db, atom_types, 
                       harmonic_bond_forces=harmonic_bond_force, 
                       harmonic_angle_forces=harmonic_angle_force, 
                       lennard_jones_forces=lennard_jones_force,
