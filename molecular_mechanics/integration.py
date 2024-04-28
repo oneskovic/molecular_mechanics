@@ -46,13 +46,10 @@ class VerletIntegrator:
             for i, atom in enumerate(self.system.atoms):
                 atom.position += position_delta[i]
                 atom.position.grad = None
-        # Invalidate the cached total energy
-        self.system.potential_energy = None
 
         new_acceleration = self._get_acceleration()
         velocity_delta = 0.5 * self.timestep * (acceleration + new_acceleration)
 
         for i in range(len(self.system.atoms)):
             self.system.velocities[i] += velocity_delta[i]
-        # Since only the velocities were updated, the total energy is still valid here
-        # Also don't zero out the gradients since they are needed for the next iteration
+        # Don't zero out the gradients here, as they are needed for the next iteration

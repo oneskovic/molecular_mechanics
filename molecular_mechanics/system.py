@@ -3,12 +3,7 @@ import itertools
 import torch
 from torch import Tensor
 
-from molecular_mechanics.atom import (
-    Atom,
-    get_bond_angle,
-    get_dihedral_angle,
-    get_distance,
-)
+from molecular_mechanics.atom import Atom
 from molecular_mechanics.constants import BOLTZMANN
 from molecular_mechanics.forces import ForceField
 from molecular_mechanics.molecule import (
@@ -19,6 +14,26 @@ from molecular_mechanics.molecule import (
     get_all_pairs_bond_separation,
 )
 
+class _PotentialEnergyCache:
+    def __init__(self):
+        self._atoms_positions_hash = None
+        self._energy = None
+
+    
+    def _get_positions_hash(self, atoms: list[Atom]) -> int:
+        position_tensor = torch.stack([atom.position for atom in atoms])
+        return hash(tuple(position_tensor.flatten().tolist()))
+    
+
+    def update(self, atoms: list[Atom], energy: Tensor) -> None:
+        self._atoms_positions_hash = self._get_positions_hash(atoms)
+        self._energy = energy
+
+
+    def get_energy(self, atoms: list[Atom]) -> Tensor | None:
+        if self._atoms_positions_hash != self._get_positions_hash(atoms):
+            return None
+        return self._energy
 
 class System:
     def __init__(
@@ -42,13 +57,7 @@ class System:
         if self.temperature is not None:
             self.velocities = self.initialize_velocities(temperature)
 
-        # Energy is cached in this variable after it is calculated
-        # Subsequent calls to get_total_energy will return this value
-        # Should be invalidated by setting it to None whenever the positions
-        # of the atoms are changed
-        # TODO: Invalidate the cached total energy automatically in a 
-        # property setter for self.atoms
-        self.potential_energy: Tensor | None = None
+        self._potential_energy_cache = _PotentialEnergyCache()
 
     def initialize_velocities(self, temperature):
         """
@@ -140,75 +149,19 @@ class System:
         return total_energy
 
     def get_potential_energy(self) -> Tensor:
-        # Return the cached total energy if it exists
-        if self.potential_energy is not None:
-            return self.potential_energy
+        cached_energy = self._potential_energy_cache.get_energy(self.atoms)
+        if cached_energy is not None:
+            return cached_energy
         
         total_energy = torch.tensor(0.0)
         total_energy += self.get_bonds_energy()
         total_energy += self.get_angles_energy()
         total_energy += self.get_dihedrals_energy()
         total_energy += self.get_non_bonded_energy()
-        self.potential_energy = total_energy
+        self._potential_energy_cache.update(self.atoms, total_energy)
         return total_energy
     
     def get_kinetic_energy(self) -> Tensor:
         mass = torch.tensor([atom.atom_type.mass for atom in self.atoms])
         velocity_norms = self.velocities.norm(dim=1)
         return 0.5 * (mass * velocity_norms ** 2).sum()
-
-    def print_state(self) -> None:
-        description_width = 25
-        value_width = 20
-        precision = 6
-
-        header = "STATE"
-        width = description_width + value_width
-        dashes = "-" * ((width - len(header)) // 2)
-        print(dashes + header + dashes)
-
-        desc_val_dict: dict[str, float] = {}
-
-        self.potential_energy = self.get_potential_energy()
-        desc_val_dict["Total energy"] = self.potential_energy.item()
-
-        # FIXME: Duplicate code from get_bonds_energy
-        for bond in self.bonds:
-            ind1, ind2 = bond
-            atom1, atom2 = self.atoms[ind1], self.atoms[ind2]
-            description = f"Bond length {atom1.element}{ind1}-{atom2.element}{ind2}:"
-            distance = get_distance(atom1, atom2)
-            desc_val_dict[description] = distance.item()
-
-        # FIXME: Duplicate code from get_angles_energy
-        for angle in self.angles:
-            i, j, k = angle
-            atom1, atom2, atom3 = self.atoms[i], self.atoms[j], self.atoms[k]
-            atom1_str = f"{atom1.element}{i}"
-            atom2_str = f"{atom2.element}{j}"
-            atom3_str = f"{atom3.element}{k}"
-            description = f"Angle {atom1_str}-{atom2_str}-{atom3_str}:"
-            angle_val = get_bond_angle(atom1, atom2, atom3)
-            desc_val_dict[description] = angle_val.item()
-
-        for dihedral in self.dihedrals:
-            i, j, k, m = dihedral
-            atom1, atom2, atom3, atom4 = (
-                self.atoms[i],
-                self.atoms[j],
-                self.atoms[k],
-                self.atoms[m],
-            )
-            atom1_str = f"{atom1.element}{i}"
-            atom2_str = f"{atom2.element}{j}"
-            atom3_str = f"{atom3.element}{k}"
-            atom4_str = f"{atom4.element}{m}"
-            description = f"Dihedral {atom1_str}-{atom2_str}-{atom3_str}-{atom4_str}:"
-            angle_val = get_dihedral_angle(atom1, atom2, atom3, atom4)
-            desc_val_dict[description] = angle_val.item()
-
-        for description, value in desc_val_dict.items():
-            print(
-                f"{description:<{description_width}}{value:>{value_width}.{precision}f}"
-            )
-        print("-" * width)

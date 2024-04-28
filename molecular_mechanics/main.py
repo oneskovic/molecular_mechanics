@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 from molecular_mechanics.forcefield_parser import load_forcefield
 from molecular_mechanics.atom import Atom, get_bond_angle, get_distance
 from molecular_mechanics.integration import VerletIntegrator
+from molecular_mechanics.logging import XYZTrajectoryWriter, print_system_state
 from molecular_mechanics.system import System
 from molecular_mechanics.pdb_parser import atoms_and_bonds_from_pdb
 
@@ -10,30 +11,33 @@ force_field = load_forcefield('data/tip3p.xml')
 atoms, connections = atoms_and_bonds_from_pdb("data/vodica.pdb", force_field)
 system = System(atoms, connections, force_field, temperature=300.0)
 
-def minimize_energy(system: System, iterations: int):
+def minimize_energy(system: System):
     positions = [atom.position for atom in system.atoms]
     optimizer = Adam(positions)
 
-    for i in range(iterations):
+    i = 0
+    while True:
         if i % 100 == 0:
             print(f"Iteration {i}")
-            system.print_state()
+            print_system_state(system)
         energy = system.get_potential_energy()
+        if energy < 1e-4:
+            break
         energy.backward()
         optimizer.step()
-        # Invalidate the cached total energy
-        system.potential_energy = None
         optimizer.zero_grad()
 
 def dynamics(system: System, iterations: int):
     integrator = VerletIntegrator(system)
     print_freq = 100
+    sample_freq = 20
     total_energy = []
     potential_energy = []
     kinetic_energy = []
     bond_angle = []
     bond_length12 = []
     bond_length23 = []
+    xyz_writer = XYZTrajectoryWriter("trajectory.xyz", system)
     for i in range(iterations):
         p = system.get_potential_energy()
         k = system.get_kinetic_energy()
@@ -43,11 +47,13 @@ def dynamics(system: System, iterations: int):
         bond_angle.append(get_bond_angle(*system.atoms).item())
         bond_length12.append(get_distance(system.atoms[0], system.atoms[1]).item())
         bond_length23.append(get_distance(system.atoms[1], system.atoms[2]).item())
+        if i % sample_freq == 0:
+            xyz_writer.write()
         if i % print_freq == 0:
             print(f"Iteration {i}")
-            system.print_state()
+            print_system_state(system)
         integrator.step()
-    
+    xyz_writer.close()
 
     fig, axs = plt.subplot_mosaic([
         ["energy", "energy"],
@@ -70,4 +76,5 @@ def dynamics(system: System, iterations: int):
     plt.show()
 
 if __name__ == "__main__":
-    dynamics(system, 10000)
+    minimize_energy(system)
+    dynamics(system, 50000)
