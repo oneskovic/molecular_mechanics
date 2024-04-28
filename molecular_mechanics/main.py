@@ -7,8 +7,8 @@ from molecular_mechanics.logging import XYZTrajectoryWriter, print_system_state
 from molecular_mechanics.system import System
 from molecular_mechanics.pdb_parser import atoms_and_bonds_from_pdb
 
-force_field = load_forcefield('data/tip3p.xml')
-atoms, connections = atoms_and_bonds_from_pdb("data/vodica.pdb", force_field)
+force_field = load_forcefield('data/ff14SB.xml')
+atoms, connections = atoms_and_bonds_from_pdb("data/example.pdb", force_field)
 system = System(atoms, connections, force_field, temperature=300.0)
 
 def minimize_energy(system: System):
@@ -44,7 +44,7 @@ def dynamics(system: System, iterations: int):
         total_energy.append((p + k).item())
         potential_energy.append(p.item())
         kinetic_energy.append(k.item())
-        bond_angle.append(get_bond_angle(*system.atoms).item())
+        #bond_angle.append(get_bond_angle(*system.atoms).item())
         bond_length12.append(get_distance(system.atoms[0], system.atoms[1]).item())
         bond_length23.append(get_distance(system.atoms[1], system.atoms[2]).item())
         if i % sample_freq == 0:
@@ -76,5 +76,5 @@ def dynamics(system: System, iterations: int):
     plt.show()
 
 if __name__ == "__main__":
-    minimize_energy(system)
-    dynamics(system, 50000)
+    #minimize_energy(system)
+    dynamics(system, 5000)
