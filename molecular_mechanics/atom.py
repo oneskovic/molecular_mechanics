@@ -3,10 +3,11 @@ from torch import Tensor
 
 
 class Atom:
-    def __init__(self, element: str, position: Tensor, mass: float):
+    def __init__(self, element: str, charge: float, position: Tensor, mass: float):
         self.element = element
         self.position = position
         self.mass = mass
+        self.charge = charge
 
 
 def get_bond_angle(atom1: Atom, atom2: Atom, atom3: Atom) -> Tensor:

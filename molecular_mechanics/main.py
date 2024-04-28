@@ -1,42 +1,14 @@
 import torch
 from torch.optim import Adam
 from matplotlib import pyplot as plt
-
+from molecular_mechanics.forcefield_parser import ff14sb_forcefield
 from molecular_mechanics.atom import Atom, get_bond_angle, get_distance
-from molecular_mechanics.forces import (
-    CoulombForce,
-    ForceField,
-    HarmonicAngleForce,
-    HarmonicAngleForceParams,
-    HarmonicBondForce,
-    HarmonicBondForceParams,
-    LennardJonesForce,
-    LennardJonesForceParams,
-)
 from molecular_mechanics.integration import VerletIntegrator
 from molecular_mechanics.system import System
+from molecular_mechanics.pdb_parser import atoms_and_bonds_from_pdb
 
-atoms = [
-    Atom("H", torch.tensor([0.0, 0.09572, 0.0], requires_grad=True), 1.0),
-    Atom("O", torch.tensor([0.0, 0.0, 0.0], requires_grad=True), 16.0),
-    Atom("H", torch.tensor([0.0, 0.0, 0.09572], requires_grad=True), 1.0),
-]
-force_field = ForceField(
-    harmonic_bond_forces=HarmonicBondForce(
-        {("O", "H"): HarmonicBondForceParams(0.09572, 462750.4)}
-    ),
-    harmonic_angle_forces=HarmonicAngleForce(
-        {("H", "O", "H"): HarmonicAngleForceParams(1.82421813418, 836.8)}
-    ),
-    lennard_jones_forces=LennardJonesForce(
-        {
-            "H": LennardJonesForceParams(0.0, 1.0),
-            "O": LennardJonesForceParams(0.635968, 0.31507524065751241),
-        }
-    ),
-    coulomb_forces=CoulombForce({"H": 0.417, "O": -0.834}),
-)
-connections = [[1], [0, 2], [1]]
+force_field = ff14sb_forcefield()
+atoms, connections = atoms_and_bonds_from_pdb("data/test.pdb", force_field)
 system = System(atoms, connections, force_field, temperature=0.0)
 
 def minimize_energy(system: System, iterations: int):
@@ -69,7 +41,7 @@ def dynamics(system: System, iterations: int):
         total_energy.append((p + k).item())
         potential_energy.append(p.item())
         kinetic_energy.append(k.item())
-        bond_angle.append(get_bond_angle(*system.atoms).item())
+        #bond_angle.append(get_bond_angle(*system.atoms).item())
         bond_length12.append(get_distance(system.atoms[0], system.atoms[1]).item())
         bond_length23.append(get_distance(system.atoms[1], system.atoms[2]).item())
         if i % print_freq == 0:

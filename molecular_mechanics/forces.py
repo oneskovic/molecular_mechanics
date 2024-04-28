@@ -1,5 +1,5 @@
 import typing
-
+import math
 import torch
 
 from molecular_mechanics.atom import (
@@ -9,7 +9,7 @@ from molecular_mechanics.atom import (
     get_distance,
 )
 from molecular_mechanics.constants import COULOMB
-
+from molecular_mechanics.residue_database import ResidueDatabase
 
 class HarmonicBondForceParams:
     def __init__(self, length: float, k: float):
@@ -28,6 +28,17 @@ class HarmonicBondForce:
     def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
         bond = (atom1.element, atom2.element)
         force = torch.tensor(0.0)
+        # Try to find similar bond that does exist (for example c - ch3 does not exist but c-c does)
+        if bond not in self.bond_dict:
+            element1 = atom1.element[0]
+            element2 = atom2.element[0]
+            # Try replacing only one element first
+            if (element1, atom2.element) in self.bond_dict:
+                bond = (element1, atom2.element)
+            elif (atom1.element, element2) in self.bond_dict:
+                bond = (atom1.element, element2)
+            else: # Try replacing both elements
+                bond = (element1, element2)
         if bond in self.bond_dict:
             length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
             dist = (atom1.position - atom2.position).norm()
@@ -129,19 +140,13 @@ class LennardJonesForce:
 
 
 class CoulombForce:
-    def __init__(self, charge_dict: dict[str, float]):
-        self.charge_dict = charge_dict
+    def __init__(self):
+        pass
 
     def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
-        if (
-            atom1.element not in self.charge_dict
-            or atom2.element not in self.charge_dict
-        ):
-            return torch.tensor(0.0)
-
         charge1, charge2 = (
-            self.charge_dict[atom1.element],
-            self.charge_dict[atom2.element],
+            atom1.charge,
+            atom2.charge,
         )
         dist = get_distance(atom1, atom2)
         force = COULOMB * charge1 * charge2 / dist
@@ -151,6 +156,8 @@ class CoulombForce:
 class ForceField:
     def __init__(
         self,
+        residue_database: ResidueDatabase,
+        atom_masses: dict[str, float],
         harmonic_bond_forces: HarmonicBondForce | None = None,
         harmonic_angle_forces: HarmonicAngleForce | None = None,
         dihedral_forces: DihedralForce | None = None,
@@ -158,6 +165,8 @@ class ForceField:
         coulomb_forces: CoulombForce | None = None,
         non_bonded_scaling_factor: float | None = None,
     ):
+        self.residue_database = residue_database
+        self.atom_masses = atom_masses
         self.harmonic_bond_forces = harmonic_bond_forces
         self.harmonic_angle_forces = harmonic_angle_forces
         self.dihedral_forces = dihedral_forces

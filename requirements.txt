@@ -3,3 +3,4 @@ plotly
 torch
 pytest
 biopython
+matplotlib
