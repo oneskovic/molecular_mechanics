@@ -23,17 +23,18 @@ def get_distance(atom1: Atom, atom2: Atom) -> Tensor:
 
 def get_dihedral_angle(atom1: Atom, atom2: Atom, atom3: Atom, atom4: Atom) -> Tensor:
     # https://math.stackexchange.com/questions/47059/how-do-i-calculate-a-dihedral-angle-given-cartesian-coordinates
-    b1 = atom1.position - atom2.position
+    b1 = atom2.position - atom1.position
     b2 = atom3.position - atom2.position
     b3 = atom4.position - atom3.position
-    b1_normed = b1 / torch.linalg.norm(b1)
-    b2_normed = b2 / torch.linalg.norm(b2)
-    b3_normed = b3 / torch.linalg.norm(b3)
 
-    n1 = torch.linalg.cross(b1_normed, b2_normed)
-    n2 = torch.linalg.cross(b2_normed, b3_normed)
+    cross12 = torch.cross(b1, b2)
+    cross23 = torch.cross(b2, b3)
 
-    m1 = torch.linalg.cross(n1, b2)
+    n1 = cross12 / torch.linalg.norm(cross12)
+    n2 = cross23 / torch.linalg.norm(cross23)
+
+    b2_normalized = b2 / torch.linalg.norm(b2)
+    m1 = torch.linalg.cross(n1, b2_normalized)
 
     x = torch.dot(n1, n2)
     y = torch.dot(m1, n2)
