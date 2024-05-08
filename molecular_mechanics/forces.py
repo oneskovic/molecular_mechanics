@@ -18,7 +18,7 @@ class HarmonicBondForceParams:
 
 
 class HarmonicBondForce:
-    def __init__(self, bond_dict: dict[tuple, HarmonicBondForceParams]):
+    def __init__(self, bond_dict: dict[tuple[str, str], HarmonicBondForceParams]):
         self.bond_dict = bond_dict
         # Add reverse bonds
         temp_dict = bond_dict.copy()
@@ -27,11 +27,12 @@ class HarmonicBondForce:
 
     def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
         bond = (atom1.element, atom2.element)
-        force = torch.tensor(0.0)
-        if bond in self.bond_dict:
-            length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
-            dist = (atom1.position - atom2.position).norm()
-            force = k * (dist - length) ** 2 / 2
+        if bond not in self.bond_dict:
+            raise KeyError(f"Bond {bond} not found in force field")
+        
+        length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
+        dist = (atom1.position - atom2.position).norm()
+        force = k * (dist - length) ** 2 / 2
         return force
 
 
@@ -52,7 +53,7 @@ class HarmonicAngleForce:
     def get_force(self, atom1: Atom, atom2: Atom, atom3: Atom) -> torch.Tensor:
         atoms = (atom1.element, atom2.element, atom3.element)
         if atoms not in self.angle_dict:
-            return torch.tensor(0.0)
+            raise KeyError(f"Angle {atoms} not found in force field")
 
         angle, k = self.angle_dict[atoms].angle, self.angle_dict[atoms].k
         current_angle = get_bond_angle(atom1, atom2, atom3)
@@ -82,7 +83,7 @@ class DihedralForce:
     ) -> torch.Tensor:
         atoms = (atom1.element, atom2.element, atom3.element, atom4.element)
         if atoms not in self.dihedral_dict:
-            return torch.tensor(0.0)
+            raise KeyError(f"Dihedral {atoms} not found in force field")
 
         k, n, phi = (
             self.dihedral_dict[atoms].k,
@@ -107,8 +108,10 @@ class LennardJonesForce:
         self.lj_dict = lj_dict
 
     def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
-        if atom1.element not in self.lj_dict or atom2.element not in self.lj_dict:
-            return torch.tensor(0.0)
+        if atom1.element not in self.lj_dict:
+            raise KeyError(f"Lennard-Jones parameters not found for {atom1.element}")
+        if atom2.element not in self.lj_dict:
+            raise KeyError(f"Lennard-Jones parameters not found for {atom2.element}")
 
         epsilon1, sigma1 = (
             self.lj_dict[atom1.element].epsilon,
@@ -133,11 +136,10 @@ class CoulombForce:
         self.charge_dict = charge_dict
 
     def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
-        if (
-            atom1.element not in self.charge_dict
-            or atom2.element not in self.charge_dict
-        ):
-            return torch.tensor(0.0)
+        if atom1.element not in self.charge_dict:
+            raise KeyError(f"Charge not found for {atom1.element}")
+        if atom2.element not in self.charge_dict:
+            raise KeyError(f"Charge not found for {atom2.element}")
 
         charge1, charge2 = (
             self.charge_dict[atom1.element],
