@@ -27,8 +27,8 @@ def get_dihedral_angle(atom1: Atom, atom2: Atom, atom3: Atom, atom4: Atom) -> Te
     b2 = atom3.position - atom2.position
     b3 = atom4.position - atom3.position
 
-    cross12 = torch.cross(b1, b2)
-    cross23 = torch.cross(b2, b3)
+    cross12 = torch.linalg.cross(b1, b2)
+    cross23 = torch.linalg.cross(b2, b3)
 
     n1 = cross12 / torch.linalg.norm(cross12)
     n2 = cross23 / torch.linalg.norm(cross23)
