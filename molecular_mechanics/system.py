@@ -46,7 +46,10 @@ class System:
         self.atoms = atoms
         self.connections = connections
         self.force_field = force_field
-        self.temperature = temperature
+        if temperature is not None:
+            self.temperature = temperature
+        else:
+            self.temperature = 293.15  # Room temperature in Kelvin
 
         # Precomputed properties of the system
         self.bonds = get_all_bonds(connections)
@@ -54,12 +57,11 @@ class System:
         self.dihedrals = get_all_dihedrals(connections)
         self.all_pairs_bond_separation = get_all_pairs_bond_separation(connections)
 
-        if self.temperature is not None:
-            self.velocities = self.initialize_velocities(temperature)
+        self.velocities = self.initialize_velocities(self.temperature)
 
         self._potential_energy_cache = _PotentialEnergyCache()
 
-    def initialize_velocities(self, temperature):
+    def initialize_velocities(self, temperature: float) -> Tensor:
         """
         Initialize velocities for the atoms in the system
         according to the Maxwell-Boltzmann distribution.

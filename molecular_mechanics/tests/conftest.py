@@ -41,7 +41,8 @@ def ethane():
             {("H", "C", "C", "H"): DihedralForceParams(0.6276, 3, 0.0)}
         )
     )
-    connections = [[0], [1, 2, 3, 4], [0], [0], [0, 5, 6, 7], [4], [4], [4]]
+    connections = [[1, 2, 3, 4], [0], [0], [0], [0, 5, 6, 7], [4], [4], [4]]
+
     return atoms, force_field, connections
 
 @pytest.fixture

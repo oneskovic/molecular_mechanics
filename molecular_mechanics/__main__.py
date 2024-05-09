@@ -40,6 +40,7 @@ if __name__ == "__main__":
         raise NotImplementedError("PDB file parsing not implemented yet")
     else:
         print(f"Unknown input file format: '${args.input_file.split('.')[-1]}'")
+        exit(1)
 
     
     system = System(atoms, connections, force_field, temperature=args.temperature) 
