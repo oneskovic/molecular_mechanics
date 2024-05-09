@@ -18,7 +18,7 @@ class VerletIntegrator:
         self.system = system
         self.timestep = timestep
 
-        self.mass = torch.tensor([atom.mass for atom in self.system.atoms])
+        self.mass = torch.tensor([atom.atom_type.mass for atom in self.system.atoms])
 
     def _get_acceleration(self) -> Tensor:
         def is_valid_grad(grad_list: list[Tensor | None]) -> TypeGuard[list[Tensor]]:

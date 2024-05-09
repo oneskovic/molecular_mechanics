@@ -67,8 +67,10 @@ class System:
         according to the Maxwell-Boltzmann distribution.
         """
 
+        torch.manual_seed(0)
+
         # TODO: Verify that this is the correct way to initialize velocities
-        mass = torch.tensor([atom.mass for atom in self.atoms])
+        mass = torch.tensor([atom.atom_type.mass for atom in self.atoms])
         vx = torch.normal(mean=0, std=torch.sqrt(BOLTZMANN * temperature / mass))
         vy = torch.normal(mean=0, std=torch.sqrt(BOLTZMANN * temperature / mass))
         vz = torch.normal(mean=0, std=torch.sqrt(BOLTZMANN * temperature / mass))
@@ -162,6 +164,6 @@ class System:
         return total_energy
     
     def get_kinetic_energy(self) -> Tensor:
-        mass = torch.tensor([atom.mass for atom in self.atoms])
+        mass = torch.tensor([atom.atom_type.mass for atom in self.atoms])
         velocity_norms = self.velocities.norm(dim=1)
         return 0.5 * (mass * velocity_norms ** 2).sum()

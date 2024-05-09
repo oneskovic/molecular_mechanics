@@ -1,5 +1,4 @@
 import typing
-
 import torch
 
 from molecular_mechanics.atom import (
@@ -9,7 +8,8 @@ from molecular_mechanics.atom import (
     get_distance,
 )
 from molecular_mechanics.constants import COULOMB
-
+from molecular_mechanics.residue_database import ResidueDatabase
+from molecular_mechanics.atom import AtomType
 
 class HarmonicBondForceParams:
     def __init__(self, length: float, k: float):
@@ -18,7 +18,7 @@ class HarmonicBondForceParams:
 
 
 class HarmonicBondForce:
-    def __init__(self, bond_dict: dict[tuple[str, str], HarmonicBondForceParams]):
+    def __init__(self, bond_dict: dict[tuple, HarmonicBondForceParams]):
         self.bond_dict = bond_dict
         # Add reverse bonds
         temp_dict = bond_dict.copy()
@@ -26,13 +26,14 @@ class HarmonicBondForce:
             self.bond_dict[(bond[1], bond[0])] = params
 
     def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
-        bond = (atom1.element, atom2.element)
-        if bond not in self.bond_dict:
-            raise KeyError(f"Bond {bond} not found in force field")
-        
-        length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
-        dist = (atom1.position - atom2.position).norm()
-        force = k * (dist - length) ** 2 / 2
+        bond = (atom1.atom_type.atom_class, atom2.atom_type.atom_class)
+        force = torch.tensor(0.0)
+        if bond in self.bond_dict:
+            length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
+            dist = (atom1.position - atom2.position).norm()
+            k /= 1000.0
+            length *= 10.0
+            force = k * (dist - length) ** 2 / 2
         return force
 
 
@@ -51,7 +52,7 @@ class HarmonicAngleForce:
             self.angle_dict[(angle[2], angle[1], angle[0])] = params
 
     def get_force(self, atom1: Atom, atom2: Atom, atom3: Atom) -> torch.Tensor:
-        atoms = (atom1.element, atom2.element, atom3.element)
+        atoms = (atom1.atom_type.atom_class, atom2.atom_type.atom_class, atom3.atom_type.atom_class)
         if atoms not in self.angle_dict:
             raise KeyError(f"Angle {atoms} not found in force field")
 
@@ -132,18 +133,13 @@ class LennardJonesForce:
 
 
 class CoulombForce:
-    def __init__(self, charge_dict: dict[str, float]):
-        self.charge_dict = charge_dict
+    def __init__(self):
+        pass
 
     def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
-        if atom1.element not in self.charge_dict:
-            raise KeyError(f"Charge not found for {atom1.element}")
-        if atom2.element not in self.charge_dict:
-            raise KeyError(f"Charge not found for {atom2.element}")
-
         charge1, charge2 = (
-            self.charge_dict[atom1.element],
-            self.charge_dict[atom2.element],
+            atom1.charge,
+            atom2.charge,
         )
         dist = get_distance(atom1, atom2)
         force = COULOMB * charge1 * charge2 / dist
@@ -153,6 +149,8 @@ class CoulombForce:
 class ForceField:
     def __init__(
         self,
+        residue_database: ResidueDatabase,
+        atom_types: list[AtomType],
         harmonic_bond_forces: HarmonicBondForce | None = None,
         harmonic_angle_forces: HarmonicAngleForce | None = None,
         dihedral_forces: DihedralForce | None = None,
@@ -160,6 +158,8 @@ class ForceField:
         coulomb_forces: CoulombForce | None = None,
         non_bonded_scaling_factor: float | None = None,
     ):
+        self.residue_database = residue_database
+        self.atom_types = atom_types
         self.harmonic_bond_forces = harmonic_bond_forces
         self.harmonic_angle_forces = harmonic_angle_forces
         self.dihedral_forces = dihedral_forces
