@@ -102,7 +102,7 @@ def test_coulomb_force(three_waters):
     coulomb_forces = forcefield.coulomb_forces
 
     force_oh = coulomb_forces.get_force(atoms[2], atoms[4])
-    assert_close(force_oh, torch.tensor(-0.196505*COULOMB))
+    assert_close(force_oh, torch.tensor(-0.1965054455*COULOMB))
 
 def test_coulomb_force_symmetry(three_waters):
     atoms, forcefield, _ = three_waters
