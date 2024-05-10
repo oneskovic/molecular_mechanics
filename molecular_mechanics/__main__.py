@@ -7,6 +7,9 @@ from molecular_mechanics.energy_minimization import minimize_energy
 from molecular_mechanics.logging import XYZTrajectoryWriter
 from molecular_mechanics.molecular_dynamics import run_dynamics
 from molecular_mechanics.system import System
+from molecular_mechanics.forcefield_parser import load_forcefield
+from molecular_mechanics.pdb_parser import atoms_and_bonds_from_pdb
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -17,6 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("-plt", "--save-energy-plot", type=str)
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-m", "--minimize-energy", action="store_true")
+    parser.add_argument("-ff", "--force-field", type=str, default="data/ff14SB.xml")
     args = parser.parse_args()
 
     infile_path = pathlib.Path(args.input_file)
@@ -37,7 +41,8 @@ if __name__ == "__main__":
             print("Input file must define 'atoms', 'connections', and 'force_field' variables")
             exit(1)
     elif infile_path.suffix == ".pdb":
-        raise NotImplementedError("PDB file parsing not implemented yet")
+        force_field = load_forcefield(args.force_field)
+        atoms, connections = atoms_and_bonds_from_pdb(str(infile_path), force_field)
     else:
         print(f"Unknown input file format: '${args.input_file.split('.')[-1]}'")
         exit(1)

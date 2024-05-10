@@ -5,7 +5,7 @@ from molecular_mechanics.forces import ForceField
 from molecular_mechanics.residue_database import load_residue_database
 from molecular_mechanics.atom import AtomType
 
-def load_forcefield(forcefield_file = 'data/ff14SB.xml') -> ForceField:
+def load_forcefield(forcefield_file : str) -> ForceField:
     tree = ET.parse(forcefield_file)
     atom_types = []
     # Load atom masses
@@ -49,9 +49,10 @@ def load_forcefield(forcefield_file = 'data/ff14SB.xml') -> ForceField:
     coulomb_force = CoulombForce()
     residue_db = load_residue_database(forcefield_file)
 
-    return ForceField(residue_db, atom_types, 
-                      harmonic_bond_forces=harmonic_bond_force, 
-                      harmonic_angle_forces=harmonic_angle_force, 
+    return ForceField(
+                                                                            atom_types, residue_db,
+                      harmonic_bond_forces                      =    harmonic_bond_force, 
+                                  harmonic_angle_forces   =                     harmonic_angle_force, 
                       lennard_jones_forces=lennard_jones_force,
-                      coulomb_forces=coulomb_force)
+                                                              coulomb_forces=coulomb_force)
 

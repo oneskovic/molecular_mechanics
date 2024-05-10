@@ -11,6 +11,12 @@ def __atoms_to_xyz(atoms: list[Atom]) -> str:
     return xyz
 
 def atoms_and_bonds_from_pdb(file_path: str, forcefield : ForceField) -> tuple[list[Atom], list[list[int]]]:
+    residue_db = forcefield.residue_database
+    if residue_db is None:
+        raise ValueError("Forcefield does not have a residue database")
+    atom_types = forcefield.atom_types
+    if atom_types is None:
+        raise ValueError("Forcefield does not have atom types")
     # Read the atoms from the pdb file
     atoms = []
     with open(file_path, "r") as file:
@@ -21,10 +27,10 @@ def atoms_and_bonds_from_pdb(file_path: str, forcefield : ForceField) -> tuple[l
                 atom_name = tokens[2]
                 residue = tokens[3]
                 position = torch.tensor([float(tokens[6]), float(tokens[7]), float(tokens[8])], requires_grad=True)
-                charge = forcefield.residue_database.get_charge(residue, atom_name)
+                charge = residue_db.get_charge(residue, atom_name)
                 
                 element = tokens[-1]
-                atom_type = [atom_type for atom_type in forcefield.atom_types if atom_type.element == element][0]
+                atom_type = [atom_type for atom_type in atom_types if atom_type.element == element][0]
                 atoms.append(Atom(atom_name, charge, position, atom_type))
 
     # TODO: Connection data can be read from the pdb by looking at bonds in the residues, order of amino acids and connect records

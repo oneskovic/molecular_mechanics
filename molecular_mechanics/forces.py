@@ -27,13 +27,12 @@ class HarmonicBondForce:
 
     def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
         bond = (atom1.atom_type.atom_class, atom2.atom_type.atom_class)
+        if bond not in self.bond_dict:
+            raise KeyError(f"Bond {bond} not found in force field")
         force = torch.tensor(0.0)
-        if bond in self.bond_dict:
-            length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
-            dist = (atom1.position - atom2.position).norm()
-            k /= 1000.0
-            length *= 10.0
-            force = k * (dist - length) ** 2 / 2
+        length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
+        dist = (atom1.position - atom2.position).norm()
+        force = k * (dist - length) ** 2 / 2
         return force
 
 
@@ -109,18 +108,20 @@ class LennardJonesForce:
         self.lj_dict = lj_dict
 
     def get_force(self, atom1: Atom, atom2: Atom) -> torch.Tensor:
-        if atom1.element not in self.lj_dict:
-            raise KeyError(f"Lennard-Jones parameters not found for {atom1.element}")
-        if atom2.element not in self.lj_dict:
-            raise KeyError(f"Lennard-Jones parameters not found for {atom2.element}")
+        class1 = atom1.atom_type.atom_class
+        class2 = atom2.atom_type.atom_class
+        if class1 not in self.lj_dict:
+            raise KeyError(f"Lennard-Jones parameters not found for {class1}")
+        if class2 not in self.lj_dict:
+            raise KeyError(f"Lennard-Jones parameters not found for {class2}")
 
         epsilon1, sigma1 = (
-            self.lj_dict[atom1.element].epsilon,
-            self.lj_dict[atom1.element].sigma,
+            self.lj_dict[class1].epsilon,
+            self.lj_dict[class1].sigma,
         )
         epsilon2, sigma2 = (
-            self.lj_dict[atom2.element].epsilon,
-            self.lj_dict[atom2.element].sigma,
+            self.lj_dict[class2].epsilon,
+            self.lj_dict[class2].sigma,
         )
         dist = (atom1.position - atom2.position).norm()
         dist = typing.cast(torch.Tensor, dist)
@@ -149,8 +150,8 @@ class CoulombForce:
 class ForceField:
     def __init__(
         self,
-        residue_database: ResidueDatabase,
-        atom_types: list[AtomType],
+        atom_types: list[AtomType] | None = None,
+        residue_database: ResidueDatabase | None = None,
         harmonic_bond_forces: HarmonicBondForce | None = None,
         harmonic_angle_forces: HarmonicAngleForce | None = None,
         dihedral_forces: DihedralForce | None = None,

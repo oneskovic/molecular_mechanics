@@ -13,14 +13,14 @@
   </Residue>
  </Residues>
  <HarmonicBondForce>
-  <Bond type1="tip3p-O" type2="tip3p-H" length="0.09572" k="553000.0"/>
+  <Bond type1="tip3p-O" type2="tip3p-H" length="0.9572" k="450.0"/>
  </HarmonicBondForce>
  <HarmonicAngleForce>
-  <Angle type1="tip3p-H" type2="tip3p-O" type3="tip3p-H" angle="1.82421813418" k="100.0"/>
+  <Angle type1="tip3p-H" type2="tip3p-O" type3="tip3p-H" angle="1.82421813418" k="836.8"/>
  </HarmonicAngleForce>
  <NonbondedForce coulomb14scale="0.833333333333" lj14scale="0.5">
   <UseAttributeFromResidue name="charge"/>
-  <Atom type="tip3p-O" sigma="0.31507524065751241" epsilon="0.635968"/>
-  <Atom type="tip3p-H" sigma="1" epsilon="0"/>
+  <Atom type="tip3p-O" sigma="3.1507" epsilon="0.1521"/>
+  <Atom type="tip3p-H" sigma="0.4" epsilon="0.0460"/>
  </NonbondedForce>
 </ForceField>
