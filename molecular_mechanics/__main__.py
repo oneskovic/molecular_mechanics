@@ -15,7 +15,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file", type=str)
     parser.add_argument("output_file", type=str)
-    parser.add_argument("-t", "--temperature", type=float, default=300.0)
+    parser.add_argument("-t", "--temperature", type=float)
     parser.add_argument("-it", "--iterations", type=int, default=1000)
     parser.add_argument("-plt", "--save-energy-plot", type=str)
     parser.add_argument("-v", "--verbose", action="store_true")
