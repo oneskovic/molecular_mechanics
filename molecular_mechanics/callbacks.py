@@ -1,4 +1,5 @@
 from typing import Protocol
+import sys
 
 import matplotlib.pyplot as plt
 
@@ -27,19 +28,29 @@ class SystemStatePrinting(Callback):
 
 class ProgressBar(Callback):
     def __init__(self, max_iterations: int):
+        self.pbar = tqdm(total=max_iterations, file=sys.stdout)
+        # Save stdout to restore it later and redirect to tqdm.write
+        self.save_stdout = sys.stdout
+        sys.stdout = self.DummyFile(self.save_stdout)
         self.max_iterations = max_iterations
-        self.pbar = tqdm(total=max_iterations)
     
     def __call__(self, i, system):
         self.pbar.update(1)
-        # Reset the progress bar if this is the last iteration
-        if i == self.max_iterations - 1:
-            self.pbar.close()
-            self.pbar = tqdm(total=self.max_iterations)
     
     def close(self):
         self.pbar.close()
+        sys.stdout = self.save_stdout
     
+    # Dummy file that writes to tqdm.write
+    class DummyFile(object):
+        file = None
+        def __init__(self, file):
+            self.file = file
+
+        def write(self, x):
+            # Avoid print() second call (useless \n)
+            if len(x.rstrip()) > 0:
+                tqdm.write(x, file=self.file)
 
 class TrajectoryWriting(Callback):
     def __init__(self, trajectory_writer, sample_freq: int = 20):

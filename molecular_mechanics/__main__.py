@@ -58,7 +58,7 @@ if __name__ == "__main__":
                 self.callbacks.append(SystemStatePrinting())
             if args.save_energy_plot:
                 self.callbacks.append(Plotting(args.save_energy_plot))
-            self.callbacks.append(ProgressBar(100))
+            self.callbacks.append(ProgressBar(args.iterations))
             self.trajectory_writer = XYZTrajectoryWriter(args.output_file)
             self.callbacks.append(TrajectoryWriting(self.trajectory_writer))
         
