@@ -45,7 +45,7 @@ def atoms_and_bonds_from_pdb(file_path: str, forcefield : ForceField) -> tuple[l
     mg.read_xyz(f'data/tmp.xyz')
     # Convert the molecular graph to the NetworkX graph
     G = to_networkx_graph(mg)
-    adjacency_list = [list(G.neighbors(n)) for n in G.nodes]
+    adjacency_list = [list(G.neighbors(n)) for n in sorted(G.nodes)]
 
     # There seems to be a bug in this library that sometimes returns an adjacency list where an atom is
     # connected to itself. We need to remove those
