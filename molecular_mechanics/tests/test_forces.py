@@ -78,16 +78,15 @@ def test_lennard_jones_force(three_waters):
     atoms, forcefield, _ = three_waters
     lj_forces = forcefield.lennard_jones_forces
 
-    # H has epsilon 0 so the force should be 0
     force_oh = lj_forces.get_force(atoms[0], atoms[4])
-    assert_close(force_oh, torch.tensor(0.0))
+    assert_close(force_oh, torch.tensor(-0.008758))
     force_hh = lj_forces.get_force(atoms[0], atoms[3])
-    assert_close(force_hh, torch.tensor(0.0))
+    # TODO: The force is very small between H-H, should
+    # test this with different positions
+    assert_close(force_hh, torch.tensor(0.0000003))
 
-    # TODO: The force is very small between O-O, should
-    # test this with a different positions
-    force_oo = lj_forces.get_force(atoms[0], atoms[3])
-    assert_close(force_oo, torch.tensor(0.000005))
+    force_oo = lj_forces.get_force(atoms[1], atoms[4])
+    assert_close(force_oo, torch.tensor(1.530663))
 
 def test_lennard_jones_force_symmetry(three_waters):
     atoms, forcefield, _ = three_waters

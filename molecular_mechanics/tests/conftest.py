@@ -59,14 +59,14 @@ def three_waters():
 
     force_field = ForceField(
         harmonic_bond_forces=HarmonicBondForce({
-            ("H", "O"): HarmonicBondForceParams(0.9572, 462.7504),
+            ("H", "O"): HarmonicBondForceParams(0.9572, 450.0),
         }),
         harmonic_angle_forces=HarmonicAngleForce({
-            ("H", "O", "H"): HarmonicAngleForceParams(1.82421813418, 836.8),
+            ("H", "O", "H"): HarmonicAngleForceParams(1.82421813418, 55.0),
         }),
         lennard_jones_forces=LennardJonesForce({
-            "O": LennardJonesForceParams(0.635968, 0.31507524065751241),
-            "H": LennardJonesForceParams(0.0, 1.0)
+            "O": LennardJonesForceParams(0.1521, 3.1507),
+            "H": LennardJonesForceParams(0.0460, 0.4)
         }),
         coulomb_forces=CoulombForce()
     )

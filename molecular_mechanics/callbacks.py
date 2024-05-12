@@ -2,6 +2,7 @@ from typing import Protocol
 import sys
 
 import matplotlib.pyplot as plt
+from torch import Tensor
 
 from molecular_mechanics.logging import print_system_state
 from molecular_mechanics.system import System
@@ -101,6 +102,19 @@ class EnergyDiff(Callback):
         if self._energy is not None and i % self.printing_freq == 0:
             print(f"Energy difference: {abs(new_energy - self._energy)}")
         self._energy = new_energy
+
+    def close(self):
+        pass
+
+
+class EnergyMonitor(Callback):
+    def __init__(self) -> None:
+        self.potential_energies : list[float] = []
+        self.kinetic_energies : list[float] = []
+
+    def __call__(self, _, system: System):
+        self.potential_energies.append(system.get_potential_energy().item())
+        self.kinetic_energies.append(system.get_kinetic_energy().item())
 
     def close(self):
         pass
