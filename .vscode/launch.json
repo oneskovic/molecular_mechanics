@@ -10,12 +10,12 @@
             "request": "launch",
             "module": "molecular_mechanics",
             "args": [
-                "data/water_five.pdb",
-                "-ff", "data/tip3p-custom.xml",
+                "data/gly_gly_gly.pdb",
+                "-ff", "data/ff14SB.xml",
                 "trajectory.xyz",
-                "-it", "5000",
+                "-it", "10000",
                 "-plt", "figure.png",
-                "-t", "0",
+                "-t", "300",
                 "-v",
                 "-m"
             ]

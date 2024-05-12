@@ -1,6 +1,6 @@
 import typing
 import torch
-
+from difflib import SequenceMatcher
 from molecular_mechanics.atom import (
     Atom,
     get_bond_angle,
@@ -32,6 +32,9 @@ class HarmonicBondForce:
         force = torch.tensor(0.0)
         length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
         dist = (atom1.position - atom2.position).norm()
+        # TODO: Remove this
+        k /= 1000
+        length *= 10
         force = k * (dist - length) ** 2 / 2
         return force
 
@@ -43,17 +46,45 @@ class HarmonicAngleForceParams:
 
 
 class HarmonicAngleForce:
-    def __init__(self, angle_dict: dict[tuple, HarmonicAngleForceParams]):
+    soft_match_cache: dict[tuple[str,str,str], tuple[str,str,str]]
+    def __init__(self, angle_dict: dict[tuple[str,str,str], HarmonicAngleForceParams]):
         self.angle_dict = angle_dict
+        self.soft_match_cache = {}
         # Add reverse angles
         temp_dict = angle_dict.copy()
         for angle, params in temp_dict.items():
             self.angle_dict[(angle[2], angle[1], angle[0])] = params
 
+    def soft_search(self, atom1: str, atom2: str, atom3: str, match_tolerance = 0.8) -> tuple[str,str,str] | None:
+        atoms_str = "".join([atom1, atom2, atom3])
+        atoms = (atom1, atom2, atom3)
+        if atoms in self.soft_match_cache:
+            return self.soft_match_cache[atoms]
+        best_match = None
+        best_match_factor = 0
+        for dict_atoms, params in self.angle_dict.items():
+            # Concatenate the atoms in the dictionary
+            dict_atoms_str = "".join(dict_atoms)
+            # Remove numbers and * from the string
+            dict_atoms_str = "".join(filter(str.isalpha, dict_atoms_str))
+
+            match_result = SequenceMatcher(None, atoms_str, dict_atoms_str).ratio()
+            if match_result > best_match_factor:
+                best_match = dict_atoms
+                best_match_factor = match_result
+
+        if best_match_factor < match_tolerance:
+            return None
+        self.soft_match_cache[atoms] = best_match
+        return best_match
+
     def get_force(self, atom1: Atom, atom2: Atom, atom3: Atom) -> torch.Tensor:
         atoms = (atom1.atom_type.atom_class, atom2.atom_type.atom_class, atom3.atom_type.atom_class)
         if atoms not in self.angle_dict:
-            raise KeyError(f"Angle {atoms} not found in force field")
+            soft_key = self.soft_search(atoms[0], atoms[1], atoms[2])
+            if soft_key is None:
+                raise KeyError(f"Angle {atoms} not found in force field")
+            atoms = soft_key
 
         angle, k = self.angle_dict[atoms].angle, self.angle_dict[atoms].k
         current_angle = get_bond_angle(atom1, atom2, atom3)
