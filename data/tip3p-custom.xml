@@ -16,7 +16,7 @@
   <Bond type1="tip3p-O" type2="tip3p-H" length="0.9572" k="450.0"/>
  </HarmonicBondForce>
  <HarmonicAngleForce>
-  <Angle type1="tip3p-H" type2="tip3p-O" type3="tip3p-H" angle="1.82421813418" k="836.8"/>
+  <Angle type1="tip3p-H" type2="tip3p-O" type3="tip3p-H" angle="1.82421813418" k="55.0"/>
  </HarmonicAngleForce>
  <NonbondedForce coulomb14scale="0.833333333333" lj14scale="0.5">
   <UseAttributeFromResidue name="charge"/>
