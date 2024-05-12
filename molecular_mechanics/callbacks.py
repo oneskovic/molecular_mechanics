@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from molecular_mechanics.logging import print_system_state
 from molecular_mechanics.system import System
 
+from tqdm import tqdm
+
 class Callback(Protocol):
     def __call__(self, i: int, system: System):
         pass
@@ -22,6 +24,22 @@ class SystemStatePrinting(Callback):
     
     def close(self):
         pass
+
+class ProgressBar(Callback):
+    def __init__(self, max_iterations: int):
+        self.max_iterations = max_iterations
+        self.pbar = tqdm(total=max_iterations)
+    
+    def __call__(self, i, system):
+        self.pbar.update(1)
+        # Reset the progress bar if this is the last iteration
+        if i == self.max_iterations - 1:
+            self.pbar.close()
+            self.pbar = tqdm(total=self.max_iterations)
+    
+    def close(self):
+        self.pbar.close()
+    
 
 class TrajectoryWriting(Callback):
     def __init__(self, trajectory_writer, sample_freq: int = 20):

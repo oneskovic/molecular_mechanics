@@ -2,7 +2,7 @@ import argparse
 import importlib.util
 import pathlib
 
-from molecular_mechanics.callbacks import Callback, Plotting, SystemStatePrinting, TrajectoryWriting
+from molecular_mechanics.callbacks import Callback, Plotting, SystemStatePrinting, TrajectoryWriting, ProgressBar
 from molecular_mechanics.energy_minimization import minimize_energy
 from molecular_mechanics.logging import XYZTrajectoryWriter
 from molecular_mechanics.molecular_dynamics import run_dynamics
@@ -20,6 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("-plt", "--save-energy-plot", type=str)
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-m", "--minimize-energy", action="store_true")
+    parser.add_argument("-mit", "--minimize-iterations", type=int, default=1000)
     parser.add_argument("-ff", "--force-field", type=str, default="data/ff14SB.xml")
     args = parser.parse_args()
 
@@ -57,6 +58,7 @@ if __name__ == "__main__":
                 self.callbacks.append(SystemStatePrinting())
             if args.save_energy_plot:
                 self.callbacks.append(Plotting(args.save_energy_plot))
+            self.callbacks.append(ProgressBar(100))
             self.trajectory_writer = XYZTrajectoryWriter(args.output_file)
             self.callbacks.append(TrajectoryWriting(self.trajectory_writer))
         
@@ -70,5 +72,5 @@ if __name__ == "__main__":
             self.trajectory_writer.close()
 
     if args.minimize_energy:
-        minimize_energy(system)
+        minimize_energy(system, max_iterations=args.minimize_iterations)
     run_dynamics(system, args.iterations, DynamicsCallback()) 
