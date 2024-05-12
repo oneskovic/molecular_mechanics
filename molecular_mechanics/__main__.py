@@ -75,6 +75,8 @@ if __name__ == "__main__":
         def __init__(self):
             self.callbacks = []
             self.callbacks.append(EnergyDiff())
+            self.trajectory_writer = XYZTrajectoryWriter("energy-minimization.xyz")
+            self.callbacks.append(TrajectoryWriting(self.trajectory_writer))
         
         def __call__(self, i: int, system: System):
             for callback in self.callbacks:
@@ -83,6 +85,7 @@ if __name__ == "__main__":
         def close(self):
             for callback in self.callbacks:
                 callback.close()
+            self.trajectory_writer.close()
 
     if args.minimize_energy:
         minimize_energy(system, max_iterations=args.minimize_iterations, callback=EnergyMinimizationCallback())
