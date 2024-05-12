@@ -32,9 +32,6 @@ class HarmonicBondForce:
         force = torch.tensor(0.0)
         length, k = self.bond_dict[bond].length, self.bond_dict[bond].k
         dist = (atom1.position - atom2.position).norm()
-        # TODO: Remove this
-        k /= 1000
-        length *= 10
         force = k * (dist - length) ** 2 / 2
         return force
 
