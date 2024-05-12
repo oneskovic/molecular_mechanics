@@ -2,7 +2,7 @@ import argparse
 import importlib.util
 import pathlib
 
-from molecular_mechanics.callbacks import Callback, Plotting, SystemStatePrinting, TrajectoryWriting, ProgressBar
+from molecular_mechanics.callbacks import Callback, EnergyDiff, Plotting, SystemStatePrinting, TrajectoryWriting, ProgressBar
 from molecular_mechanics.energy_minimization import minimize_energy
 from molecular_mechanics.logging import XYZTrajectoryWriter
 from molecular_mechanics.molecular_dynamics import run_dynamics
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         force_field = load_forcefield(args.force_field)
         atoms, connections = atoms_and_bonds_from_pdb(str(infile_path), force_field)
     else:
-        print(f"Unknown input file format: '${args.input_file.split('.')[-1]}'")
+        print(f"Unknown input file format: '{args.input_file.split('.')[-1]}'")
         exit(1)
 
     
@@ -71,6 +71,19 @@ if __name__ == "__main__":
                 callback.close()
             self.trajectory_writer.close()
 
+    class EnergyMinimizationCallback(Callback):
+        def __init__(self):
+            self.callbacks = []
+            self.callbacks.append(EnergyDiff())
+        
+        def __call__(self, i: int, system: System):
+            for callback in self.callbacks:
+                callback(i, system)
+        
+        def close(self):
+            for callback in self.callbacks:
+                callback.close()
+
     if args.minimize_energy:
-        minimize_energy(system, max_iterations=args.minimize_iterations)
+        minimize_energy(system, max_iterations=args.minimize_iterations, callback=EnergyMinimizationCallback())
     run_dynamics(system, args.iterations, DynamicsCallback()) 

@@ -89,3 +89,18 @@ class Plotting(Callback):
         self.ax.legend()
         self.fig.savefig(self.plot_path)
         plt.close(self.fig)
+
+class EnergyDiff(Callback):
+    def __init__(self, printing_freq: int = 10):
+        self.printing_freq = printing_freq
+        
+        self._energy = None
+
+    def __call__(self, i: int, system: System):
+        new_energy = system.get_potential_energy()
+        if self._energy is not None and i % self.printing_freq == 0:
+            print(f"Energy difference: {abs(new_energy - self._energy)}")
+        self._energy = new_energy
+
+    def close(self):
+        pass
