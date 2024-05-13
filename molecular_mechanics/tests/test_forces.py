@@ -3,6 +3,7 @@ import torch
 from torch.testing import assert_close
 
 from molecular_mechanics.constants import COULOMB
+from molecular_mechanics.forces import HarmonicBondForceParams, SoftSearch
 
 def test_bond_force(ethane):
     atoms, forcefield, _ = ethane
@@ -110,3 +111,13 @@ def test_coulomb_force_symmetry(three_waters):
     force_oh = coulomb_forces.get_force(atoms[2], atoms[4])
     force_ho = coulomb_forces.get_force(atoms[4], atoms[2])
     assert_close(force_oh, force_ho)
+
+def test_soft_searcher():
+    atoms = ("C", "H")
+    bond_dict = {
+        ("C1", "HC1"): HarmonicBondForceParams(0.0, 0.0),
+        ("N", "H"): HarmonicBondForceParams(0.0, 0.0),
+    }
+    soft_searcher = SoftSearch(bond_dict)
+    key = soft_searcher.search(atoms)
+    assert key == ("C1", "HC1")

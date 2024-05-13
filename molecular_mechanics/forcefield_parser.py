@@ -23,6 +23,11 @@ def load_forcefield(forcefield_file : str) -> ForceField:
         type2 = child.attrib['type2']
         length = float(child.attrib['length'])
         k = float(child.attrib['k'])
+        # FIXME ff14SB.xml has bad units for k and length
+        # this is hardcoded to fix it for now
+        if forcefield_file == 'data/ff14SB.xml':
+            k /= 1000
+            length *= 10
         harmonic_force_dict[(type1,type2)] = HarmonicBondForceParams(length, k)
     
     harmonic_angle_force_dict = dict()
