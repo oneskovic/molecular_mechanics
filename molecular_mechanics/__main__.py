@@ -74,9 +74,9 @@ if __name__ == "__main__":
     class EnergyMinimizationCallback(Callback):
         def __init__(self):
             self.callbacks = []
-            self.callbacks.append(EnergyDiff())
             self.trajectory_writer = XYZTrajectoryWriter("energy-minimization.xyz")
-            self.callbacks.append(TrajectoryWriting(self.trajectory_writer))
+            self.callbacks.append(TrajectoryWriting(self.trajectory_writer, sample_freq=1))
+            self.callbacks.append(SystemStatePrinting(printing_freq=1))
         
         def __call__(self, i: int, system: System):
             for callback in self.callbacks:
@@ -89,4 +89,4 @@ if __name__ == "__main__":
 
     if args.minimize_energy:
         minimize_energy(system, max_iterations=args.minimize_iterations, callback=EnergyMinimizationCallback())
-    run_dynamics(system, args.iterations, DynamicsCallback()) 
+    run_dynamics(system, args.iterations, DynamicsCallback())
