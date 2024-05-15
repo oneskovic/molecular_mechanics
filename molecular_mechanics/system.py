@@ -75,6 +75,17 @@ class System:
             self.sigma_ij = (sigmas[:, None] + sigmas[None, :]) / 2
             self.epsilon_ij = torch.sqrt(epsilons[:, None] * epsilons[None, :])
 
+        if force_field.harmonic_angle_forces is not None:
+            angle_dict = force_field.harmonic_angle_forces.angle_dict
+
+            self.k_ijk = torch.zeros((len(self.atoms), len(self.atoms), len(self.atoms)))
+            self.theta_ijk = torch.zeros((len(self.atoms), len(self.atoms), len(self.atoms)))
+            for i, j, k in self.angles:
+                atom1, atom2, atom3 = self.atoms[i], self.atoms[j], self.atoms[k]
+                curr_atoms = (atom1.atom_type.atom_class, atom2.atom_type.atom_class, atom3.atom_type.atom_class)
+                self.k_ijk[i, j, k] = angle_dict[curr_atoms].k
+                self.theta_ijk[i, j, k] = angle_dict[curr_atoms].angle
+
     def initialize_velocities(self, temperature: float) -> Tensor:
         """
         Initialize velocities for the atoms in the system
@@ -112,6 +123,17 @@ class System:
             atom1, atom2, atom3 = self.atoms[ind1], self.atoms[ind2], self.atoms[ind3]
             energy += harmonic_angle_forces.get_force(atom1, atom2, atom3)
         return energy
+    
+    def get_angles_energy_fast(self) -> Tensor:
+        position = torch.stack([atom.position for atom in self.atoms])
+        position_diff_ij = position.unsqueeze(1) - position.unsqueeze(0)
+        position_diff_norm = (position_diff_ij.norm(dim=2) + torch.eye(len(self.atoms))).unsqueeze(2)
+        position_diff_ij = position_diff_ij / position_diff_norm
+        angles_ijk = torch.einsum('ijv,kjv->ijk', position_diff_ij, position_diff_ij)
+        angles_ijk = torch.clamp(angles_ijk, -0.9999, 0.9999)
+        angles_ijk = torch.acos(angles_ijk)
+        return 0.5 * (self.k_ijk * (angles_ijk - self.theta_ijk) ** 2).sum()
+
 
     def get_dihedrals_energy(self) -> Tensor:
         dihedral_forces = self.force_field.dihedral_forces
@@ -212,7 +234,7 @@ class System:
         
         total_energy = torch.tensor(0.0)
         total_energy += self.get_bonds_energy()
-        total_energy += self.get_angles_energy()
+        total_energy += self.get_angles_energy_fast()
         total_energy += self.get_dihedrals_energy()
         total_energy += self.get_non_bonded_energy()
         self._potential_energy_cache.update(self.atoms, total_energy)
