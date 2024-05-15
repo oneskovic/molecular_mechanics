@@ -3,6 +3,7 @@ import itertools
 import torch
 from torch import Tensor
 
+from molecular_mechanics import constants
 from molecular_mechanics.atom import Atom
 from molecular_mechanics.constants import BOLTZMANN
 from molecular_mechanics.forces import ForceField
@@ -36,6 +37,7 @@ class _PotentialEnergyCache:
         return self._energy
 
 class System:
+    torch.manual_seed(0)
     def __init__(
         self,
         atoms: list[Atom],
@@ -61,13 +63,23 @@ class System:
 
         self._potential_energy_cache = _PotentialEnergyCache()
 
+        # Vectorization precomputations
+        charge = torch.tensor([atom.charge for atom in self.atoms])
+        self.charge_ij = charge[:, None] * charge[None, :]
+        self.separation_ij = torch.tensor(self.all_pairs_bond_separation)
+        
+        if force_field.lennard_jones_forces is not None:
+            lj_dict = self.force_field.lennard_jones_forces.lj_dict
+            sigmas = torch.tensor([lj_dict[atom.atom_type.atom_class].sigma for atom in self.atoms])
+            epsilons = torch.tensor([lj_dict[atom.atom_type.atom_class].epsilon for atom in self.atoms])
+            self.sigma_ij = (sigmas[:, None] + sigmas[None, :]) / 2
+            self.epsilon_ij = torch.sqrt(epsilons[:, None] * epsilons[None, :])
+
     def initialize_velocities(self, temperature: float) -> Tensor:
         """
         Initialize velocities for the atoms in the system
         according to the Maxwell-Boltzmann distribution.
         """
-
-        torch.manual_seed(0)
 
         # TODO: Verify that this is the correct way to initialize velocities
         mass = torch.tensor([atom.atom_type.mass for atom in self.atoms])
@@ -117,38 +129,81 @@ class System:
             )
             energy += dihedral_forces.get_force(atom1, atom2, atom3, atom4)
         return energy
-
-    def get_non_bonded_energy(self) -> Tensor:
+    
+    def get_lennard_jones_energy(self) -> Tensor:
         lennard_jones_forces = self.force_field.lennard_jones_forces
-        coulomb_forces = self.force_field.coulomb_forces
-        scaling_factor = self.force_field.non_bonded_scaling_factor
         total_energy = torch.tensor(0.0)
+        scaling_factor = self.force_field.non_bonded_scaling_factor
         for (i, atom1), (j, atom2) in itertools.combinations(enumerate(self.atoms), 2):
             bond_separation = self.all_pairs_bond_separation[i][j]
+            if bond_separation < 3:
+                continue
             lj = (
                 lennard_jones_forces.get_force(atom1, atom2)
                 if lennard_jones_forces
                 else torch.tensor(0)
             )
+            if scaling_factor and bond_separation == 3:
+                total_energy += lj * scaling_factor
+            else:
+                total_energy += lj
+        return total_energy
+    
+    def get_lennard_jones_energy_fast(self) -> Tensor:
+        ''' Vectorized version of get_lennard_jones_energy '''
+        position = torch.stack([atom.position for atom in self.atoms])
+        position_diff_ij = position.unsqueeze(1) - position.unsqueeze(0)
+        r_ij_norm = position_diff_ij.norm(dim=2) + torch.eye(len(self.atoms))
+        lj = 4 * self.epsilon_ij * ((self.sigma_ij / r_ij_norm) ** 12 - (self.sigma_ij / r_ij_norm) ** 6)
+        lj = torch.triu(lj, diagonal=1)
+        bonded_mask = self.separation_ij < 3
+        lj[bonded_mask] = 0
+        if self.force_field.non_bonded_scaling_factor:
+            scaled_mask = self.separation_ij == 3
+            lj[scaled_mask] *= self.force_field.non_bonded_scaling_factor
+        return lj.sum()
+    
+    def get_coulomb_energy(self) -> Tensor:
+        coulomb_forces = self.force_field.coulomb_forces
+        total_energy = torch.tensor(0.0)
+        scaling_factor = self.force_field.non_bonded_scaling_factor
+        for (i, atom1), (j, atom2) in itertools.combinations(enumerate(self.atoms), 2):
+            bond_separation = self.all_pairs_bond_separation[i][j]
+            if bond_separation < 3:
+                continue
             coulomb = (
                 coulomb_forces.get_force(atom1, atom2)
                 if coulomb_forces
                 else torch.tensor(0)
             )
-            # Nonbonded interactions are only calculated between atoms in
-            # different molecules or for atoms in the same molecule separated
-            # by at least three bonds. Those non-bonded interactions separated
-            # by exactly three bonds (“1-4 interactions”) are reduced by the
-            # application of a scalefactor.
-            if bond_separation < 3:
-                continue
             if scaling_factor and bond_separation == 3:
-                total_energy += lj * scaling_factor
                 total_energy += coulomb * scaling_factor
             else:
-                total_energy += lj
                 total_energy += coulomb
         return total_energy
+    
+    def get_coulomb_energy_fast(self) -> Tensor:
+        ''' Vectorized version of get_coulomb_energy '''
+        position = torch.stack([atom.position for atom in self.atoms])
+        position_diff_ij = position.unsqueeze(1) - position.unsqueeze(0)
+        r_ij_norm = position_diff_ij.norm(dim=2) + torch.eye(len(self.atoms))
+        coulomb = torch.triu(self.charge_ij / r_ij_norm, diagonal=1)
+        bonded_mask = self.separation_ij < 3
+        coulomb[bonded_mask] = 0
+        if self.force_field.non_bonded_scaling_factor:
+            scaled_mask = self.separation_ij == 3
+            coulomb[scaled_mask] *= self.force_field.non_bonded_scaling_factor
+        return constants.COULOMB * coulomb.sum()
+
+
+    def get_non_bonded_energy(self) -> Tensor:
+        energy = torch.tensor(0.0)
+        if self.force_field.lennard_jones_forces:
+            energy += self.get_lennard_jones_energy_fast()
+        if self.force_field.coulomb_forces:
+            energy += self.get_coulomb_energy_fast()
+        return energy
+    
 
     def get_potential_energy(self) -> Tensor:
         cached_energy = self._potential_energy_cache.get_energy(self.atoms)
