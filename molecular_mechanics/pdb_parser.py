@@ -1,16 +1,23 @@
+from tempfile import NamedTemporaryFile
+import os
+
 from molecular_mechanics.atom import Atom
+from molecular_mechanics.constants import ANGSTROM2NM
 from molecular_mechanics.forces import ForceField
 from xyz2graph import MolGraph, to_networkx_graph
 import torch
 
-def __atoms_to_xyz(atoms: list[Atom]) -> str:
+from molecular_mechanics.molecule import Graph
+
+def _atoms_to_xyz(atoms: list[Atom]) -> str:
     xyz = f"{len(atoms)}\n\n"
     for atom in atoms:
-        element = atom.element[0] # First character of the atom name is the element
-        xyz += f"{element} {atom.position[0]} {atom.position[1]} {atom.position[2]}\n"
+        element = atom.element[0]
+        x, y, z = atom.position / ANGSTROM2NM
+        xyz += f"{element} {x} {y} {z}\n"
     return xyz
 
-def atoms_and_bonds_from_pdb(file_path: str, forcefield : ForceField) -> tuple[list[Atom], list[list[int]]]:
+def atoms_and_bonds_from_pdb(file_path: str, forcefield : ForceField) -> tuple[list[Atom], Graph]:
     residue_db = forcefield.residue_database
     if residue_db is None:
         raise ValueError("Forcefield does not have a residue database")
@@ -26,24 +33,27 @@ def atoms_and_bonds_from_pdb(file_path: str, forcefield : ForceField) -> tuple[l
                 tokens = line.split()
                 atom_name = tokens[2]
                 residue = tokens[3]
-                position = torch.tensor([float(tokens[6]), float(tokens[7]), float(tokens[8])], requires_grad=True)
+                x = float(tokens[6])
+                y = float(tokens[7])
+                z = float(tokens[8])
+                position = torch.tensor([x, y, z])
+                position *= ANGSTROM2NM
+                position.requires_grad = True
                 charge = residue_db.get_charge(residue, atom_name)
-                
                 element = tokens[-1]
                 atom_type = [atom_type for atom_type in atom_types if atom_type.element == element][0]
                 atoms.append(Atom(atom_name, charge, position, atom_type))
 
     # TODO: Connection data can be read from the pdb by looking at bonds in the residues, order of amino acids and connect records
 
-    # Write the atoms to a temporary .xyz file
-    xyz_str = __atoms_to_xyz(atoms)
-    with open("data/tmp.xyz", "w") as file:
+    xyz_str = _atoms_to_xyz(atoms)
+    with NamedTemporaryFile("w",delete=False) as file:
         file.write(xyz_str)
-    
+
     mg = MolGraph()
-    # Read the data from the .xyz file
-    mg.read_xyz(f'data/tmp.xyz')
-    # Convert the molecular graph to the NetworkX graph
+    mg.read_xyz(file.name)
+    os.remove(file.name)
+
     G = to_networkx_graph(mg)
     adjacency_list = [list(G.neighbors(n)) for n in sorted(G.nodes)]
 

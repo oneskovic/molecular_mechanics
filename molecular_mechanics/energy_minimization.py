@@ -12,7 +12,7 @@ def minimize_energy(system: System, max_iterations: int | None = None, callback:
     def closure():
         optimizer.zero_grad()
         energy = system.get_potential_energy()
-        energy.backward(retain_graph=True)
+        energy.backward()
         return energy.item()
 
 

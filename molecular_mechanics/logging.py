@@ -1,4 +1,5 @@
 from molecular_mechanics.atom import get_bond_angle, get_dihedral_angle, get_distance
+from molecular_mechanics.constants import ANGSTROM2NM
 from molecular_mechanics.system import System
 
 def print_system_state(system: System, bonds=False, angles=False, dihedrals=False) -> None:
@@ -68,11 +69,12 @@ class XYZTrajectoryWriter:
         self._file = open(filename, "w")
         
 
-    def write(self, system) -> None:
+    def write(self, system: System) -> None:
         self._file.write(f"{len(system.atoms)}\n")  # number of atoms
         self._file.write("\n")  # name of molecule
         for atom in system.atoms:
-            self._file.write(f"{atom.element} {atom.position[0].item():6f} {atom.position[1].item():6f} {atom.position[2].item():6f}\n")
+            x, y, z = [coord / ANGSTROM2NM for coord in atom.position.tolist()]
+            self._file.write(f"{atom.element} {x:6f} {y:6f} {z:6f}\n")
 
 
     def close(self) -> None:
