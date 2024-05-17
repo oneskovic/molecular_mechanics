@@ -5,8 +5,7 @@ from molecular_mechanics.residue_database import ResidueDatabase
 from typing import Any
 import torch
 from molecular_mechanics.molecule import Graph, Bond, Dihedral, Angle
-
-torch_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+import molecular_mechanics.config as conf
 
 def get_key_soft_search(key: tuple, param_dict: dict[tuple, Any], soft_searcher: SoftSearch, match_tolerance = 0.8) -> tuple:
     if key not in param_dict:
@@ -30,8 +29,8 @@ class HarmonicBondForceFast:
         
         # Create bonded mask
         max_index = max([max(bond) for bond in bonds])
-        self.k_matrix = torch.zeros(max_index + 1, max_index + 1, requires_grad=False).to(torch_device)
-        self.length_matrix = torch.zeros_like(self.k_matrix, requires_grad=False).to(torch_device)
+        self.k_matrix = torch.zeros(max_index + 1, max_index + 1, requires_grad=False).to(conf.TORCH_DEVICE)
+        self.length_matrix = torch.zeros_like(self.k_matrix, requires_grad=False).to(conf.TORCH_DEVICE)
         for bond in bonds:
             ind1, ind2 = bond
             atom1, atom2 = atoms[ind1], atoms[ind2]
@@ -55,13 +54,13 @@ class CoulombForceFast:
         self.non_bonded_scaling_factor = non_bonded_scaling_factor
         charge = torch.tensor([atom.charge for atom in atoms])
         self.charge_ij = charge[:, None] * charge[None, :]
-        self.separation_ij = torch.tensor(all_pairs_bond_separation).to(torch_device)
-        self.charge_ij = self.charge_ij.to(torch_device)
+        self.separation_ij = torch.tensor(all_pairs_bond_separation).to(conf.TORCH_DEVICE)
+        self.charge_ij = self.charge_ij.to(conf.TORCH_DEVICE)
         self.n_atoms = len(atoms)
 
     def get_forces(self, atom_positions: torch.Tensor) -> torch.Tensor:
         position_diff_ij = atom_positions.unsqueeze(1) - atom_positions.unsqueeze(0)
-        r_ij_norm = position_diff_ij.norm(dim=2) + torch.eye(self.n_atoms).to(torch_device)
+        r_ij_norm = position_diff_ij.norm(dim=2) + torch.eye(self.n_atoms).to(conf.TORCH_DEVICE)
         coulomb = torch.triu(self.charge_ij / r_ij_norm, diagonal=1)
         bonded_mask = self.separation_ij < 3
         coulomb[bonded_mask] = 0
@@ -72,8 +71,8 @@ class CoulombForceFast:
 
 class HarmonicAngleForceFast:
     def __init__(self, angle_dict: dict[tuple[str, str, str], HarmonicAngleForceParams], angles: list[Angle], atoms: list[Atom]):
-        self.k_ijk = torch.zeros((len(atoms), len(atoms), len(atoms))).to(torch_device)
-        self.theta_ijk = torch.zeros((len(atoms), len(atoms), len(atoms))).to(torch_device)
+        self.k_ijk = torch.zeros((len(atoms), len(atoms), len(atoms))).to(conf.TORCH_DEVICE)
+        self.theta_ijk = torch.zeros((len(atoms), len(atoms), len(atoms))).to(conf.TORCH_DEVICE)
         soft_searcher = SoftSearch(angle_dict)
         self.n_atoms = len(atoms)
         for i, j, k in angles:
@@ -84,7 +83,7 @@ class HarmonicAngleForceFast:
 
     def get_forces(self, atom_positions: torch.Tensor) -> torch.Tensor:
         position_diff_ij = atom_positions.unsqueeze(1) - atom_positions.unsqueeze(0)
-        position_diff_norm = (position_diff_ij.norm(dim=2) + torch.eye(self.n_atoms).to(torch_device)).unsqueeze(2)
+        position_diff_norm = (position_diff_ij.norm(dim=2) + torch.eye(self.n_atoms).to(conf.TORCH_DEVICE)).unsqueeze(2)
         position_diff_ij = position_diff_ij / position_diff_norm
         angles_ijk = torch.einsum('ijv,kjv->ijk', position_diff_ij, position_diff_ij)
         angles_ijk = torch.clamp(angles_ijk, -0.9999, 0.9999)
@@ -97,13 +96,13 @@ class LennardJonesForceFast:
         sigmas = torch.tensor([lj_dict[atom.atom_type.atom_class].sigma for atom in atoms])
         epsilons = torch.tensor([lj_dict[atom.atom_type.atom_class].epsilon for atom in atoms])
         self.sigma_ij = (sigmas[:, None] + sigmas[None, :]) / 2
-        self.sigma_ij = self.sigma_ij.to(torch_device)
-        self.epsilon_ij = torch.sqrt(epsilons[:, None] * epsilons[None, :]).to(torch_device)
-        self.separation_ij = torch.tensor(all_pairs_bond_separation).to(torch_device)
+        self.sigma_ij = self.sigma_ij.to(conf.TORCH_DEVICE)
+        self.epsilon_ij = torch.sqrt(epsilons[:, None] * epsilons[None, :]).to(conf.TORCH_DEVICE)
+        self.separation_ij = torch.tensor(all_pairs_bond_separation).to(conf.TORCH_DEVICE)
 
     def get_forces(self, atom_positions: torch.Tensor) -> torch.Tensor:
         position_diff_ij = atom_positions.unsqueeze(1) - atom_positions.unsqueeze(0)
-        r_ij_norm = position_diff_ij.norm(dim=2) + torch.eye(atom_positions.shape[0]).to(torch_device)
+        r_ij_norm = position_diff_ij.norm(dim=2) + torch.eye(atom_positions.shape[0]).to(conf.TORCH_DEVICE)
         lj = 4 * self.epsilon_ij * ((self.sigma_ij / r_ij_norm) ** 12 - (self.sigma_ij / r_ij_norm) ** 6)
         lj = torch.triu(lj, diagonal=1)
         bonded_mask = self.separation_ij < 3
@@ -127,7 +126,7 @@ class DihedralForce:
             ] = params
 
     def get_forces(self, atom_positions: torch.Tensor) -> torch.Tensor:
-        force = torch.tensor(0.0).to(torch_device)
+        force = torch.tensor(0.0).to(conf.TORCH_DEVICE)
         for dihedral in self.all_dihedrals:
             ind1, ind2, ind3, ind4 = dihedral
             atoms = (self.atom_elements[ind1], self.atom_elements[ind2], self.atom_elements[ind3], self.atom_elements[ind4])

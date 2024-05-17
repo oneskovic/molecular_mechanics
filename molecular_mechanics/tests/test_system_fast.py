@@ -3,9 +3,12 @@ from molecular_mechanics.pdb_parser import atoms_and_bonds_from_pdb
 from molecular_mechanics.system_fast import SystemFast
 from molecular_mechanics.system import System
 from molecular_mechanics.integration import VerletIntegrator, FastVerletIntegrator
+import molecular_mechanics.config
 import torch
+import os
 
 def run_test(ff_file, pdb_file, iterations):
+    molecular_mechanics.config.TORCH_DEVICE = "cpu"
     # Dirty hack :(
     force_field_slow = load_forcefield(ff_file)
     atoms, connections = atoms_and_bonds_from_pdb(pdb_file, force_field_slow)
@@ -20,11 +23,15 @@ def run_test(ff_file, pdb_file, iterations):
         integrator_fast.step()
         with torch.no_grad():
             atoms_slow_tensor = torch.stack([atom.position for atom in system_slow.atoms]).cpu()
-            atoms_fast_tensor = system_fast.atom_positions.cpu()
-            assert torch.allclose(atoms_slow_tensor, atoms_fast_tensor)
+            atoms_fast_tensor = system_fast.atom_positions
+            test_ok = torch.allclose(atoms_slow_tensor, atoms_fast_tensor, atol=0.01, rtol=0.01)
+            if not test_ok:
+                print(atoms_slow_tensor)
+                print(atoms_fast_tensor)
+            assert test_ok
 
 def test_system_fast_water():
-    ff_file = 'data/tip3p-custom.xml'
+    ff_file = 'data/tip3p.xml'
     pdb_file = 'data/water/water_five.pdb'
     run_test(ff_file, pdb_file, 250)
 

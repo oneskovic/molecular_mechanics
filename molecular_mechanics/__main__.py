@@ -10,7 +10,7 @@ from molecular_mechanics.system import System
 from molecular_mechanics.system_fast import SystemFast
 from molecular_mechanics.forcefield_parser import load_forcefield, load_forcefield_vectorized
 from molecular_mechanics.pdb_parser import atoms_and_bonds_from_pdb
-
+import torch
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

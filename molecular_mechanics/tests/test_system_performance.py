@@ -6,7 +6,7 @@ from molecular_mechanics.integration import VerletIntegrator, FastVerletIntegrat
 import torch
 
 def run_system_fast_water(iterations):
-    ff_file = 'data/tip3p-custom.xml'
+    ff_file = 'data/tip3p.xml'
     pdb_file = 'data/water/water_64.pdb'
     force_field_slow = load_forcefield(ff_file)
     atoms, connections = atoms_and_bonds_from_pdb(pdb_file, force_field_slow)
@@ -17,7 +17,7 @@ def run_system_fast_water(iterations):
         integrator_fast.step()
 
 def run_system_slow_water(iterations):
-    ff_file = 'data/tip3p-custom.xml'
+    ff_file = 'data/tip3p.xml'
     pdb_file = 'data/water/water_64.pdb'
     force_field_slow = load_forcefield(ff_file)
     atoms, connections = atoms_and_bonds_from_pdb(pdb_file, force_field_slow)

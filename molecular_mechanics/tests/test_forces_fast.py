@@ -8,7 +8,7 @@ from molecular_mechanics.molecule import Graph
 from molecular_mechanics.system import System
 from molecular_mechanics.forces_fast import HarmonicBondForceFast, CoulombForceFast, HarmonicAngleForceFast, LennardJonesForceFast
 import torch
-torch_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+import molecular_mechanics.config as conf
 
 def assert_percentage_diff(a, b, threshold=0.1):
     a = a.cpu().numpy()
@@ -22,7 +22,7 @@ def total_energies_on_molecule(molecule: tuple[list[Atom], ForceField, Graph]):
         system = System(atoms, connections, forcefield)
         for _ in range(100):
             with torch.no_grad():
-                atom_positions = torch.stack([atom.position for atom in atoms]).to(torch_device)
+                atom_positions = torch.stack([atom.position for atom in atoms]).to(conf.TORCH_DEVICE)
                 if forcefield.harmonic_bond_forces is not None:
                     # Test HarmonicBondForce
                     bonds_energy_slow = system.get_bonds_energy()

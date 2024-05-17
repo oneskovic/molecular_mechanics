@@ -75,13 +75,16 @@ class XYZTrajectoryWriter:
             self._file.write(f"{len(system.atoms)}\n")  # number of atoms
             self._file.write("\n")  # name of molecule
             for atom in system.atoms:
-                self._file.write(f"{atom.element} {atom.position[0].item():6f} {atom.position[1].item():6f} {atom.position[2].item():6f}\n")
+                x, y, z = [coord / ANGSTROM2NM for coord in atom.position.tolist()]
+                self._file.write(f"{atom.element} {x:6f} {y:6f} {z:6f}\n")
         elif isinstance(system, SystemFast):
             n = system.atom_positions.shape[0]
             self._file.write(f"{n}\n")  # number of atoms
             self._file.write("\n")  # name of molecule
             for i in range(n):
-                self._file.write(f"{system.atom_elements[i]} {system.atom_positions[i][0].item():6f} {system.atom_positions[i][1].item():6f} {system.atom_positions[i][2].item():6f}\n")
+                x, y, z = [coord / ANGSTROM2NM for coord in system.atom_positions[i].tolist()]
+                element = system.atom_elements[i]
+                self._file.write(f"{element} {x:6f} {y:6f} {z:6f}\n")
     
     def close(self) -> None:
         self._file.close()

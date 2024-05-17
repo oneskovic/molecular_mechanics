@@ -13,7 +13,7 @@ from molecular_mechanics.molecule import (
     get_all_dihedrals,
     get_all_pairs_bond_separation,
 )
-torch_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+import molecular_mechanics.config as conf
 
 class _PotentialEnergyCache:
     def __init__(self):
@@ -41,9 +41,9 @@ class SystemFast:
         temperature: float | None = None,
     ):
         with torch.no_grad():
-            self.atom_positions = torch.stack([atom.position for atom in atoms]).to(torch_device)
+            self.atom_positions = torch.stack([atom.position for atom in atoms]).to(conf.TORCH_DEVICE)
         self.atom_positions.requires_grad = True
-        self.atom_masses = torch.tensor([atom.atom_type.mass for atom in atoms], requires_grad=False).to(torch_device)
+        self.atom_masses = torch.tensor([atom.atom_type.mass for atom in atoms], requires_grad=False).to(conf.TORCH_DEVICE)
         self.atom_elements = [atom.element for atom in atoms]
         self.connections = connections
         self.force_field = force_field
@@ -98,7 +98,7 @@ class SystemFast:
         return dihedral_forces.get_forces(self.atom_positions)
 
     def get_non_bonded_energy(self) -> Tensor:
-        energy = torch.tensor(0.0).to(torch_device)
+        energy = torch.tensor(0.0).to(conf.TORCH_DEVICE)
         if self.force_field.coulomb_forces is not None:
             energy += self.force_field.coulomb_forces.get_forces(self.atom_positions)
         if self.force_field.lennard_jones_forces is not None:
@@ -110,7 +110,7 @@ class SystemFast:
         if cached_energy is not None:
             return cached_energy
         
-        total_energy = torch.tensor(0.0).to(torch_device)
+        total_energy = torch.tensor(0.0).to(conf.TORCH_DEVICE)
         total_energy += self.get_bonds_energy()
         total_energy += self.get_angles_energy()
         total_energy += self.get_dihedrals_energy()
