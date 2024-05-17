@@ -2,12 +2,17 @@ import sys
 
 from molecular_mechanics.callbacks import Callback
 from molecular_mechanics.system import System
+from molecular_mechanics.system_fast import SystemFast
 from torch.optim import LBFGS
 
-def minimize_energy(system: System, max_iterations: int | None = None, callback: Callback | None = None):
+def minimize_energy(system: System | SystemFast, max_iterations: int | None = None, callback: Callback | None = None):
     if max_iterations is None:
         max_iterations = sys.maxsize
-    positions = [atom.position for atom in system.atoms]
+    
+    if isinstance(system, System):
+        positions = [atom.position for atom in system.atoms]
+    elif isinstance(system, SystemFast):
+        positions = [system.atom_positions]
     optimizer = LBFGS(positions)
     def closure():
         optimizer.zero_grad()
@@ -25,7 +30,7 @@ def minimize_energy(system: System, max_iterations: int | None = None, callback:
         if callback is not None:
             callback(i, system)
         new_energy = system.get_potential_energy()
-        if abs(energy - new_energy) < 1e-3:
+        if abs(energy - new_energy) < 0.1:
             break
         energy = new_energy
     

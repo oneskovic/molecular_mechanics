@@ -6,11 +6,12 @@ from torch import Tensor
 
 from molecular_mechanics.logging import print_system_state
 from molecular_mechanics.system import System
+from molecular_mechanics.system_fast import SystemFast
 
 from tqdm import tqdm
 
 class Callback(Protocol):
-    def __call__(self, i: int, system: System):
+    def __call__(self, i: int, system: System | SystemFast):
         pass
     def close(self):
         pass

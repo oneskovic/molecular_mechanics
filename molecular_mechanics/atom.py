@@ -46,3 +46,24 @@ def get_dihedral_angle(atom1: Atom, atom2: Atom, atom3: Atom, atom4: Atom) -> Te
 
     angle = torch.atan2(y, x)
     return angle
+
+def get_dihedral_angle_positions(atom1_position: torch.Tensor, atom2_position: torch.Tensor, atom3_position: torch.Tensor, atom4_position: torch.Tensor) -> Tensor:
+    # https://math.stackexchange.com/questions/47059/how-do-i-calculate-a-dihedral-angle-given-cartesian-coordinates
+    b1 = atom2_position - atom1_position
+    b2 = atom3_position - atom2_position
+    b3 = atom4_position - atom3_position
+
+    cross12 = torch.cross(b1, b2)
+    cross23 = torch.cross(b2, b3)
+
+    n1 = cross12 / torch.linalg.norm(cross12)
+    n2 = cross23 / torch.linalg.norm(cross23)
+
+    b2_normalized = b2 / torch.linalg.norm(b2)
+    m1 = torch.cross(n1, b2_normalized)
+
+    x = torch.dot(n1, n2)
+    y = torch.dot(m1, n2)
+
+    angle = torch.atan2(y, x)
+    return angle

@@ -7,7 +7,8 @@ from molecular_mechanics.energy_minimization import minimize_energy
 from molecular_mechanics.logging import XYZTrajectoryWriter
 from molecular_mechanics.molecular_dynamics import run_dynamics
 from molecular_mechanics.system import System
-from molecular_mechanics.forcefield_parser import load_forcefield
+from molecular_mechanics.system_fast import SystemFast
+from molecular_mechanics.forcefield_parser import load_forcefield, load_forcefield_vectorized
 from molecular_mechanics.pdb_parser import atoms_and_bonds_from_pdb
 
 
@@ -22,6 +23,7 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--minimize-energy", action="store_true")
     parser.add_argument("-mit", "--minimize-iterations", type=int, default=1000)
     parser.add_argument("-ff", "--force-field", type=str, default="data/ff14SB.xml")
+    parser.add_argument("-fast", "--fast", action="store_true", default=True)
     args = parser.parse_args()
 
     infile_path = pathlib.Path(args.input_file)
@@ -48,8 +50,11 @@ if __name__ == "__main__":
         print(f"Unknown input file format: '{args.input_file.split('.')[-1]}'")
         exit(1)
 
-    
-    system = System(atoms, connections, force_field, temperature=args.temperature) 
+    if args.fast:
+        ff_vectorized = load_forcefield_vectorized(args.force_field, atoms, connections)
+        system = SystemFast(atoms, connections, ff_vectorized, temperature=args.temperature)
+    else:
+        system = System(atoms, connections, force_field, temperature=args.temperature) 
         
     class DynamicsCallback(Callback):
         def __init__(self):
