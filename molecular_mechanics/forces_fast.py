@@ -7,7 +7,6 @@ import torch
 from molecular_mechanics.molecule import Graph, Bond, Dihedral, Angle
 
 torch_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-torch_device = "cpu"
 
 def get_key_soft_search(key: tuple, param_dict: dict[tuple, Any], soft_searcher: SoftSearch, match_tolerance = 0.8) -> tuple:
     if key not in param_dict:

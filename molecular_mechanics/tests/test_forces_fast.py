@@ -9,7 +9,6 @@ from molecular_mechanics.system import System
 from molecular_mechanics.forces_fast import HarmonicBondForceFast, CoulombForceFast, HarmonicAngleForceFast, LennardJonesForceFast
 import torch
 torch_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-torch_device = "cpu"
 
 def assert_percentage_diff(a, b, threshold=0.1):
     a = a.cpu().numpy()

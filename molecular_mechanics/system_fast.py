@@ -14,7 +14,6 @@ from molecular_mechanics.molecule import (
     get_all_pairs_bond_separation,
 )
 torch_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-torch_device = "cpu"
 
 class _PotentialEnergyCache:
     def __init__(self):
