@@ -12,6 +12,11 @@ class ResidueDatabase:
         self.residues = residues
     
     def get_charge(self, residue, atom_name):
+        if atom_name not in self.residues[residue].atom_charges:
+            if atom_name == 'H1' or atom_name == 'H2' or atom_name == 'H3':
+                atom_name = 'H'
+            else:
+                raise ValueError(f'Atom {atom_name} not found in residue {residue}')
         return self.residues[residue].atom_charges[atom_name]
         
 def load_residue_database(forcefield_file = 'data/ff14SB.xml') -> ResidueDatabase:
