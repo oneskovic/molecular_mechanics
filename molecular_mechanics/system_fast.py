@@ -1,5 +1,3 @@
-import itertools
-
 import torch
 from torch import Tensor
 
@@ -15,23 +13,6 @@ from molecular_mechanics.molecule import (
 )
 import molecular_mechanics.config as conf
 
-class _PotentialEnergyCache:
-    def __init__(self):
-        self._atoms_positions_hash = None
-        self._energy = None
-
-    def _get_positons_hash(self, atom_positions: Tensor) -> int:
-        return hash(tuple(atom_positions.flatten().tolist()))
-    
-    def update(self, atom_positions: Tensor, energy: Tensor) -> None:
-        self._atoms_positions_hash = self._get_positons_hash(atom_positions)
-        self._energy = energy
-    
-    def get_energy(self, atom_positions: Tensor) -> Tensor | None:
-        if self._atoms_positions_hash != self._get_positons_hash(atom_positions):
-            return None
-        return self._energy
-
 class SystemFast:
     def __init__(
         self,
@@ -45,6 +26,10 @@ class SystemFast:
         self.atom_positions.requires_grad = True
         self.atom_masses = torch.tensor([atom.atom_type.mass for atom in atoms], requires_grad=False).to(conf.TORCH_DEVICE)
         self.atom_elements = [atom.element for atom in atoms]
+        self.atom_types = [atom.atom_type for atom in atoms]
+        self.atom_residues = [atom.residue for atom in atoms]
+        self.atom_charges = [atom.charge for atom in atoms]
+        self.atom_molecule_numbers = [atom.molecule_number for atom in atoms]
         self.connections = connections
         self.force_field = force_field
         if temperature is not None:

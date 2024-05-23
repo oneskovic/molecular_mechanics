@@ -2,7 +2,9 @@ from molecular_mechanics.atom import get_bond_angle, get_dihedral_angle, get_dis
 from molecular_mechanics.constants import ANGSTROM2NM
 from molecular_mechanics.system import System
 from molecular_mechanics.system_fast import SystemFast
+from molecular_mechanics.atom import Atom
 import torch
+from utilities.pdb_util import format_pdb_line
 
 def print_system_state(system: System | SystemFast, bonds=False, angles=False, dihedrals=False) -> None:
     description_width = 25
@@ -94,3 +96,39 @@ class XYZTrajectoryWriter:
     
     def close(self) -> None:
         self._file.close()
+
+class PDBTrajectoryWriter:
+    def __init__(self, filename: str) -> None:
+        self._file = open(filename, "w")
+        header = "CRYST1    1.000    1.000    1.000  90.00  90.00  90.00 P 1           1 "
+        self._file.write(header + "\n")
+        self.model_number = 1
+    
+    def write(self, system: System | SystemFast) -> None:
+        if isinstance(system, System):
+            pass
+        else:
+            model_line = f"MODEL        {self.model_number}"
+            self._file.write(model_line + "\n")
+            self.model_number += 1
+            for i in range(len(system.atom_elements)):
+                x,y,z = [coord for coord in system.atom_positions[i].tolist()]
+                atom = Atom(system.atom_elements[i], system.atom_charges[i], torch.tensor([x,y,z]), system.atom_types[i], system.atom_residues[i], system.atom_molecule_numbers[i])
+                line = format_pdb_line(i+1, atom, atom.molecule_number)
+                self._file.write(line)
+
+            line = list(" "*80)
+            last_molecule_id = system.atom_molecule_numbers[-1]
+            last_atom_id = len(system.atom_elements)
+            last_residue = system.atom_residues[-1]
+            atom_element = ""
+            line = list(" "*80)
+            line[0:6] = f"{'TER':<6}"
+            line[6:11] = f"{(last_atom_id+1):>5}"
+            line[12:16] = f"{atom_element:>4}"
+            line[17:20] = f"{last_residue:>3}"
+            line[21] = "A"
+            line[22:26] = f"{last_molecule_id:>4}"
+            self._file.write("".join(line) + "\n")
+            self._file.write("ENDMDL\n")
+            

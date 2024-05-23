@@ -4,7 +4,7 @@ import pathlib
 
 from molecular_mechanics.callbacks import Callback, EnergyDiff, Plotting, SystemStatePrinting, TrajectoryWriting, ProgressBar
 from molecular_mechanics.energy_minimization import minimize_energy
-from molecular_mechanics.logging import XYZTrajectoryWriter
+from molecular_mechanics.logging import XYZTrajectoryWriter, PDBTrajectoryWriter
 from molecular_mechanics.molecular_dynamics import run_dynamics
 from molecular_mechanics.system import System
 from molecular_mechanics.system_fast import SystemFast
@@ -66,7 +66,9 @@ if __name__ == "__main__":
                 self.callbacks.append(Plotting(args.save_energy_plot))
             self.callbacks.append(ProgressBar(args.iterations))
             self.trajectory_writer = XYZTrajectoryWriter(args.output_file)
+            self.pdb_writer = PDBTrajectoryWriter(args.output_file.replace(".xyz", ".pdb"))
             self.callbacks.append(TrajectoryWriting(self.trajectory_writer))
+            self.callbacks.append(TrajectoryWriting(self.pdb_writer))
         
         def __call__(self, i: int, system: System):
             for callback in self.callbacks:
