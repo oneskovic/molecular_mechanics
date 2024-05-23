@@ -12,7 +12,7 @@ def total_energies_on_molecule(molecule: tuple[list[Atom], ForceField, Graph]):
     atoms, forcefield, connections = molecule
     system = System(atoms, connections, forcefield)
     energy_monitor = EnergyMonitor()
-    run_dynamics(system, iterations=1000, callback=energy_monitor)
+    run_dynamics(system, iterations=1000, timestep=0.001, callback=energy_monitor)
     return np.array(energy_monitor.potential_energies) + np.array(energy_monitor.kinetic_energies)
 
 def test_three_waters(three_waters):

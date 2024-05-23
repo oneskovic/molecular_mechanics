@@ -16,7 +16,10 @@ def minimize_energy(system: System | SystemFast, max_iterations: int | None = No
     optimizer = LBFGS(positions)
     def closure():
         optimizer.zero_grad()
-        energy = system.get_potential_energy()
+        if isinstance(system, System):
+            energy = system.get_potential_energy()
+        else:
+            energy = system.get_potential_energy(use_cache=False)
         energy.backward(retain_graph=True)
         return energy.item()
 

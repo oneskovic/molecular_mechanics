@@ -2,20 +2,28 @@ from molecular_mechanics.atom import get_bond_angle, get_dihedral_angle, get_dis
 from molecular_mechanics.constants import ANGSTROM2NM
 from molecular_mechanics.system import System
 from molecular_mechanics.system_fast import SystemFast
+import torch
 
 def print_system_state(system: System | SystemFast, bonds=False, angles=False, dihedrals=False) -> None:
+    description_width = 25
+    value_width = 20
+    precision = 6
+
+    header = "STATE"
+    width = description_width + value_width
+    dashes = "-" * ((width - len(header)) // 2)
+    print(dashes + header + dashes)
+    desc_val_dict: dict[str, float] = {}
+
+    if isinstance(system, SystemFast):
+        potential_energy = system.get_potential_energy()
+        kinetic_energy = system.get_kinetic_energy()
+        with torch.no_grad():
+            desc_val_dict["Potential energy"] = potential_energy.item()
+            desc_val_dict["Kinetic energy"] = kinetic_energy.item()
+            desc_val_dict["Total energy"] = (potential_energy + kinetic_energy).item()
+
     if isinstance(system, System):
-        description_width = 25
-        value_width = 20
-        precision = 6
-
-        header = "STATE"
-        width = description_width + value_width
-        dashes = "-" * ((width - len(header)) // 2)
-        print(dashes + header + dashes)
-
-        desc_val_dict: dict[str, float] = {}
-
         potential_energy = system.get_potential_energy()
         kinetic_energy = system.get_kinetic_energy()
         desc_val_dict["Potential energy"] = potential_energy.item()
@@ -59,11 +67,9 @@ def print_system_state(system: System | SystemFast, bonds=False, angles=False, d
                 angle_val = get_dihedral_angle(atom1, atom2, atom3, atom4)
                 desc_val_dict[description] = angle_val.item()
 
-        for description, value in desc_val_dict.items():
-            print(
-                f"{description:<{description_width}}{value:>{value_width}.{precision}f}"
-            )
-        print("-" * width)
+    for description, value in desc_val_dict.items():
+        print(f"{description:<{description_width}}{value:>{value_width}.{precision}f}")
+    print("-" * width)
 
 
 class XYZTrajectoryWriter:

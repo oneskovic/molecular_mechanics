@@ -4,11 +4,11 @@ from molecular_mechanics.system import System
 from molecular_mechanics.system_fast import SystemFast
 
 
-def run_dynamics(system: System | SystemFast, iterations: int, callback: Callback | None = None):
+def run_dynamics(system: System | SystemFast, iterations: int, timestep : float, callback: Callback | None = None) -> None:
     if isinstance(system, System):
-        integrator = VerletIntegrator(system)
+        integrator = VerletIntegrator(system, timestep)
     elif isinstance(system, SystemFast):
-        integrator = FastVerletIntegrator(system)
+        integrator = FastVerletIntegrator(system, timestep)
     else:
         raise ValueError("Unknown system type")
     

@@ -32,6 +32,8 @@ def atoms_and_bonds_from_pdb(file_path: str, forcefield : ForceField) -> tuple[l
             if line.startswith("ATOM") or line.startswith("HETATM"):
                 tokens = line.split()
                 atom_name = tokens[2]
+                if atom_name == 'OXT':
+                    atom_name = 'O'
                 residue = tokens[3]
                 x = float(tokens[6])
                 y = float(tokens[7])
@@ -56,6 +58,8 @@ def atoms_and_bonds_from_pdb(file_path: str, forcefield : ForceField) -> tuple[l
 
     G = to_networkx_graph(mg)
     adjacency_list = [list(G.neighbors(n)) for n in sorted(G.nodes)]
+    if sorted(G.nodes) != list(range(len(G.nodes))):
+        raise ValueError("Nodes are not numbered from 0 to n-1")
 
     # There seems to be a bug in this library that sometimes returns an adjacency list where an atom is
     # connected to itself. We need to remove those

@@ -6,8 +6,9 @@ import typing
 import torch
 
 from molecular_mechanics.atom import Atom, AtomType, get_bond_angle, get_dihedral_angle, get_distance
-from molecular_mechanics.constants import COULOMB
+from molecular_mechanics.constants import COULOMB, WILDCARD
 from molecular_mechanics.residue_database import ResidueDatabase
+from molecular_mechanics.config import SUPRESS_WARNINGS
 
 class SoftSearch:
     def __init__(self, param_dict: dict[tuple, Any]):
@@ -94,6 +95,12 @@ class HarmonicAngleForce:
 
 class DihedralForceParams:
     def __init__(self, k: float, n: int, phi: float):
+        if not isinstance(k, list):
+            k = [k]
+        if not isinstance(n, list):
+            n = [n]
+        if not isinstance(phi, list):
+            phi = [phi]
         self.k = k
         self.n = n
         self.phi = phi
@@ -115,18 +122,33 @@ class DihedralForce:
     ) -> torch.Tensor:
         atoms = (atom1.element, atom2.element, atom3.element, atom4.element)
         if atoms not in self.dihedral_dict:
-            soft_key = self.soft_searcher.search(atoms)
-            if soft_key is None:
-                raise KeyError(f"Dihedral {atoms} not found in force field")
-            atoms = soft_key
+            # Try replacing with wildcards
+            wildcard_atoms = (WILDCARD, atom2.element, atom3.element, WILDCARD)
+            if wildcard_atoms in self.dihedral_dict:
+                atoms = wildcard_atoms
+            else:
+                # Try soft search with original atoms
+                soft_key = self.soft_searcher.search(atoms)
+                if soft_key is None:
+                    # Try soft search with wildcard atoms
+                    soft_key = self.soft_searcher.search(wildcard_atoms)
+                    if soft_key is None:
+                        if not SUPRESS_WARNINGS:
+                            print(f'Warning: Dihedral {atoms} not found in force field')
+                        return torch.tensor(0.0)
+                atoms = soft_key
 
-        k, n, phi = (
-            self.dihedral_dict[atoms].k,
-            self.dihedral_dict[atoms].n,
-            self.dihedral_dict[atoms].phi,
-        )
-        angle = get_dihedral_angle(atom1, atom2, atom3, atom4)
-        force = k * (1 + torch.cos(n * angle - phi))
+        n_terms = len(self.dihedral_dict[atoms].k)
+        force = torch.tensor(0.0)
+        for i in range(n_terms):
+            k, n, phi = (
+                self.dihedral_dict[atoms].k[i],
+                self.dihedral_dict[atoms].n[i],
+                self.dihedral_dict[atoms].phi[i],
+            )
+
+            angle = get_dihedral_angle(atom1, atom2, atom3, atom4)
+            force += k * (1 + torch.cos(n * angle - phi))
         return force
 
 

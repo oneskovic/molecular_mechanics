@@ -24,6 +24,7 @@ if __name__ == "__main__":
     parser.add_argument("-mit", "--minimize-iterations", type=int, default=1000)
     parser.add_argument("-ff", "--force-field", type=str, default="data/ff14SB.xml")
     parser.add_argument("-fast", "--fast", action="store_true", default=True)
+    parser.add_argument("-dt", "--timestep", type=float, default=0.002)
     args = parser.parse_args()
 
     infile_path = pathlib.Path(args.input_file)
@@ -94,4 +95,5 @@ if __name__ == "__main__":
 
     if args.minimize_energy:
         minimize_energy(system, max_iterations=args.minimize_iterations, callback=EnergyMinimizationCallback())
-    run_dynamics(system, args.iterations, DynamicsCallback())
+    timestep = args.timestep
+    run_dynamics(system, args.iterations, timestep, DynamicsCallback())

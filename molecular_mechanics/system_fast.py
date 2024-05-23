@@ -60,7 +60,7 @@ class SystemFast:
 
         self.velocities = self.initialize_velocities(self.temperature)
 
-        self._potential_energy_cache = _PotentialEnergyCache()
+        self.cached_energy = None
 
     def initialize_velocities(self, temperature: float) -> Tensor:
         """
@@ -105,17 +105,16 @@ class SystemFast:
             energy += self.force_field.lennard_jones_forces.get_forces(self.atom_positions)
         return energy
 
-    def get_potential_energy(self) -> Tensor:
-        cached_energy = self._potential_energy_cache.get_energy(self.atom_positions)
-        if cached_energy is not None:
-            return cached_energy
+    def get_potential_energy(self, use_cache = True) -> Tensor:
+        if use_cache:
+            if self.cached_energy is not None:
+                return self.cached_energy
         
-        total_energy = torch.tensor(0.0).to(conf.TORCH_DEVICE)
-        total_energy += self.get_bonds_energy()
+        total_energy = self.get_bonds_energy()
         total_energy += self.get_angles_energy()
         total_energy += self.get_dihedrals_energy()
         total_energy += self.get_non_bonded_energy()
-        self._potential_energy_cache.update(self.atom_positions, total_energy)
+        self.cached_energy = total_energy.detach().clone()
         return total_energy
     
     def get_kinetic_energy(self) -> Tensor:

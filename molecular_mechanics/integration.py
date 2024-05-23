@@ -67,18 +67,17 @@ class FastVerletIntegrator:
     def __init__(self, system: SystemFast, timestep: float = 0.001):
         self.system = system
         self.timestep = timestep
+        self.prev_acceleration = None
 
     def _is_valid_grad(self, grad: Tensor | None) -> TypeGuard[Tensor]:
         return grad is not None and not torch.isnan(grad).any()
 
     def _get_acceleration(self) -> Tensor:
-        potential_energy = self.system.get_potential_energy()
+        self.system.atom_positions.grad = None
+        potential_energy = self.system.get_potential_energy(use_cache=False)
+        potential_energy.backward()
         grad = self.system.atom_positions.grad
-        if not self._is_valid_grad(grad):
-            potential_energy.backward()
-            grad = self.system.atom_positions.grad
-            assert self._is_valid_grad(grad)
-            
+        
         force = -grad
         acceleration = force / self.system.atom_masses[:, None]
         return acceleration
@@ -87,7 +86,10 @@ class FastVerletIntegrator:
         """
         Perform a single iteration of the Verlet integration algorithm.
         """
-        acceleration = self._get_acceleration()
+        if self.prev_acceleration is None:
+            acceleration = self._get_acceleration()
+        else:
+            acceleration = self.prev_acceleration
         position_delta = self.timestep * self.system.velocities + 0.5 * acceleration * self.timestep ** 2
 
         with torch.no_grad():
@@ -98,4 +100,5 @@ class FastVerletIntegrator:
         velocity_delta = 0.5 * self.timestep * (acceleration + new_acceleration)
 
         self.system.velocities += velocity_delta
+        self.prev_acceleration = new_acceleration
         # Don't zero out the gradients here, as they are needed for the next iteration

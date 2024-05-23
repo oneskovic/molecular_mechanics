@@ -6,7 +6,7 @@ from molecular_mechanics.forces import ForceField
 from molecular_mechanics.molecular_dynamics import run_dynamics
 from molecular_mechanics.molecule import Graph
 from molecular_mechanics.system import System
-from molecular_mechanics.forces_fast import HarmonicBondForceFast, CoulombForceFast, HarmonicAngleForceFast, LennardJonesForceFast
+from molecular_mechanics.forces_fast import HarmonicBondForceFast, CoulombForceFast, HarmonicAngleForceFast, LennardJonesForceFast, DihedralForceFast
 import torch
 import molecular_mechanics.config as conf
 
@@ -44,7 +44,15 @@ def total_energies_on_molecule(molecule: tuple[list[Atom], ForceField, Graph]):
                     fast_angle_force = HarmonicAngleForceFast(forcefield.harmonic_angle_forces.angle_dict, system.angles, atoms)
                     angles_energy_fast = fast_angle_force.get_forces(atom_positions)
                     assert_percentage_diff(angles_energy_slow, angles_energy_fast)
-            run_dynamics(system, 1)
+                
+                if forcefield.dihedral_forces is not None:
+                    # Test DihedralForce
+                    dihedrals_energy_slow = system.get_dihedrals_energy()
+                    fast_dihedral_force = DihedralForceFast(forcefield.dihedral_forces.dihedral_dict, system.dihedrals, atoms)
+                    dihedrals_energy_fast = fast_dihedral_force.get_forces(atom_positions)
+                    assert_percentage_diff(dihedrals_energy_slow, dihedrals_energy_fast)
+
+            run_dynamics(system, 1, 0.001)
 
 def test_three_waters(three_waters):
     total_energies_on_molecule(three_waters)

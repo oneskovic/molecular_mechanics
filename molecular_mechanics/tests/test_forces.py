@@ -72,8 +72,8 @@ def test_dihedral_force_symmetry(ethane):
 def test_dihedral_force_not_found(ethane):
     atoms, forcefield, _ = ethane
     dihedral_forces = forcefield.dihedral_forces
-    with pytest.raises(KeyError):
-        dihedral_forces.get_force(atoms[0], atoms[1], atoms[2], atoms[3])
+    force = dihedral_forces.get_force(atoms[0], atoms[1], atoms[2], atoms[3])
+    assert_close(force, torch.tensor(0.0))
 
 def test_lennard_jones_force(three_waters):
     atoms, forcefield, _ = three_waters
