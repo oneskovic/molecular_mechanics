@@ -30,3 +30,11 @@ Here's a table of all arguments supported by the simulator:
 |-ff (--force-field) | The xml of the force field to be used for atom parameters etc. | data/ff14SB.xml |
 |-fast (--fast) | Whether to use the vectorized form of the simulation (runs on the gpu if possible using PyTorch) - **recommended** | False |
 |-dt (--timestep) | Timestep used in the Verlet integration | 0.002 |
+
+# Forces
+Based on whether the forces act upon atoms that are considered "bonded" or not the forces belong to either bonded or nonbonded forces. The bonds between atoms are calculated from the input .pdb file on the start of the simulation. If the atom distance is less than some threshold the atoms are considered bonded and the bonds don't change during the simulation.
+
+## Non-bonded forces
+### CoulombForce
+The standard electrostatic force between two charged particles. For two particles having charges $q_1$, $q_2$ separated by distance $d$ the force equals: $k\frac{q_1 q_2}{d}$. Where $k$ is the coulomb constant.
+### 
