@@ -73,7 +73,7 @@ def load_forcefield(forcefield_file: str) -> ForceField:
         sigma = float(child.attrib["sigma"])
         epsilon = float(child.attrib["epsilon"])
         lennard_jones_force_dict[type] = LennardJonesForceParams(epsilon, sigma)
-    
+
     # Load the periodic dihedral force
     dihedral_force_dict = dict()
     for child in tree.findall("PeriodicTorsionForce/Proper"):
@@ -102,8 +102,11 @@ def load_forcefield(forcefield_file: str) -> ForceField:
 
     harmonic_bond_force = HarmonicBondForce(harmonic_force_dict)
     harmonic_angle_force = HarmonicAngleForce(harmonic_angle_force_dict)
-    lennard_jones_force = LennardJonesForce(lennard_jones_force_dict)
     coulomb_force = CoulombForce()
+    if len(lennard_jones_force_dict) == 0:
+        lennard_jones_force = None
+    else:
+        lennard_jones_force = LennardJonesForce(lennard_jones_force_dict)
     if len(dihedral_force_dict) > 0:
         dihedral_force = DihedralForce(dihedral_force_dict)
     else:
@@ -121,6 +124,7 @@ def load_forcefield(forcefield_file: str) -> ForceField:
     )
 
 def load_forcefield_vectorized(forcefield_file: str, atoms: list[Atom], connections: Graph,) -> ForceFieldVectorized:
+    
     forcefield = load_forcefield(forcefield_file)
     harmonic_bond_forces_fast = None
     harmonic_angle_forces_fast = None

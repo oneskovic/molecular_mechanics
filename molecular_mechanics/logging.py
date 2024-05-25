@@ -131,4 +131,5 @@ class PDBTrajectoryWriter:
             line[22:26] = f"{last_molecule_id:>4}"
             self._file.write("".join(line) + "\n")
             self._file.write("ENDMDL\n")
-            
+    def close(self) -> None:
+        self._file.close()

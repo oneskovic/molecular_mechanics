@@ -13,7 +13,7 @@ def minimize_energy(system: System | SystemFast, max_iterations: int | None = No
         positions = [atom.position for atom in system.atoms]
     elif isinstance(system, SystemFast):
         positions = [system.atom_positions]
-    optimizer = LBFGS(positions)
+    optimizer = LBFGS(positions,history_size=10, max_iter=4)
     def closure():
         optimizer.zero_grad()
         if isinstance(system, System):

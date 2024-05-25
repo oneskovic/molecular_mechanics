@@ -23,7 +23,7 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--minimize-energy", action="store_true")
     parser.add_argument("-mit", "--minimize-iterations", type=int, default=1000)
     parser.add_argument("-ff", "--force-field", type=str, default="data/ff14SB.xml")
-    parser.add_argument("-fast", "--fast", action="store_true", default=True)
+    parser.add_argument("-fast", "--fast", action="store_true")
     parser.add_argument("-dt", "--timestep", type=float, default=0.002)
     args = parser.parse_args()
 
@@ -67,8 +67,8 @@ if __name__ == "__main__":
             self.callbacks.append(ProgressBar(args.iterations))
             self.trajectory_writer = XYZTrajectoryWriter(args.output_file)
             self.pdb_writer = PDBTrajectoryWriter(args.output_file.replace(".xyz", ".pdb"))
-            self.callbacks.append(TrajectoryWriting(self.trajectory_writer))
-            self.callbacks.append(TrajectoryWriting(self.pdb_writer))
+            self.callbacks.append(TrajectoryWriting(self.trajectory_writer, sample_freq=10))
+            self.callbacks.append(TrajectoryWriting(self.pdb_writer, sample_freq=10))
         
         def __call__(self, i: int, system: System):
             for callback in self.callbacks:
