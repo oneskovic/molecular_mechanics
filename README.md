@@ -1,6 +1,6 @@
 # Molecular mechanics
 A university project at the Belgrade University of Mathematics, part of the Introduction to mechanics course.
-Implements a molecular dynamics simulation using the **AMBER** force field and integration of the equations of motion using the **velocity Verlet** algorithm. Energy minimization done using the **Limited-memory BFGS (L-BFGS)** algorithm in PyTorch. The following forces are implemented: `HarmonicBondForce`, `HarmonicAngleForce`, `DihedralForce`, `LennardJonesForce`, `CoulombForce`.
+Implements a molecular dynamics simulation using the **AMBER** force field and integration of the equations of motion using the **velocity Verlet** algorithm. Energy minimization done using the **Limited-memory BFGS (L-BFGS)** algorithm in PyTorch. The following forces are implemented: `HarmonicBondForce`, `HarmonicAngleForce`, `DihedralForce`, [`LennardJonesForce`](#lennardjonesforce), [`CoulombForce`](#coulombforce).
 
 <p align="center">
 <img src="https://github.com/oneskovic/molecular_mechanics/blob/main/animations/1cfg-dynamics.gif" alt="Dynamics simulation of the 1cfg protein " width="504" height="684" />
@@ -38,4 +38,4 @@ Based on whether the forces act upon atoms that are considered "bonded" or not t
 ### CoulombForce
 The standard electrostatic force between two charged particles. For two atoms having charges $q_1$, $q_2$ separated by distance $d$ the force equals: $k\frac{q_1 q_2}{d}$. Where $k$ is the coulomb constant.
 ### LennardJonesForce
-The Lennard-Jones potential (an approximation of the Van der Waals force). For two atoms separated by distance $d$, having parameters $\sigma_1$, $\epsilon_1$ and $\sigma_2$, $\epsilon_2$ the force equals: $4 * \epsilon * ((\frac{\sigma} {d})^{12} - (\frac{\sigma}{d})^6)$. Where $\epsilon = \sqrt{\epsilon_1 * \epsilon_2}$ and $\sigma = \frac{\sigma_1 + \sigma_2}{2}$.
+The Lennard-Jones potential (an approximation of the Van der Waals force). For two atoms separated by distance $d$, having parameters $\sigma_1$, $\epsilon_1$ and $\sigma_2$, $\epsilon_2$ the force equals: $4 \epsilon ((\frac{\sigma} {d})^{12} - (\frac{\sigma}{d})^6)$. Where $\epsilon = \sqrt{\epsilon_1 \epsilon_2}$ and $\sigma = \frac{\sigma_1 + \sigma_2}{2}$.
