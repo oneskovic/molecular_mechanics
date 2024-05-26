@@ -39,3 +39,10 @@ Based on whether the forces act upon atoms that are considered "bonded" or not t
 The standard electrostatic force between two charged particles. For two atoms having charges $q_1$, $q_2$ separated by distance $d$ the force equals: $k\frac{q_1 q_2}{d}$. Where $k$ is the coulomb constant.
 ### LennardJonesForce
 The Lennard-Jones potential (an approximation of the Van der Waals force). For two atoms separated by distance $d$, having parameters $\sigma_1$, $\epsilon_1$ and $\sigma_2$, $\epsilon_2$ the force equals: $4 \epsilon ((\frac{\sigma} {d})^{12} - (\frac{\sigma}{d})^6)$. Where $\epsilon = \sqrt{\epsilon_1 \epsilon_2}$ and $\sigma = \frac{\sigma_1 + \sigma_2}{2}$.
+## Bonded forces
+### HarmonicBondForce
+The force that acts between two atoms that are bonded. For two atoms separated by distance $d$ with parameters $k$, $d_0$ the force equals: $k\frac{(d - d_0)^2}{2}$. The parameters $k$ and $d_0$ represent the bond strength and the equilibrium bond length.
+### HarmonicAngleForce
+Similar to the HarmonicBondForce, the HarmonicAngleForce acts between three atoms that are bonded. For three atoms separated by angles $\theta$ with parameters $k$, $\theta_0$ the force equals: $k\frac{(\theta - \theta_0)^2}{2}$. The parameters $k$ and $\theta_0$ represent the force strength and the equilibrium angle.
+### DihedralForce
+The force that acts between four atoms that are bonded. The angle formed between the two planes defined by the first three and the last three atoms is calculated this is $\theta$. The parameters $k$, $\theta_0$ and $n$ represent the force strength, $\theta_0$ is the phase offset and $n$ is the periodicity of the force. The force equals: $k(1 + \cos(n \theta - \theta_0))$.
