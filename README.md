@@ -1,6 +1,6 @@
 # Molecular mechanics
 A university project at the Belgrade University of Mathematics, part of the Introduction to mechanics course.
-Implements a molecular dynamics simulation using the **AMBER** force field and integration of the equations of motion using the **velocity Verlet** algorithm. Energy minimization done using the **Limited-memory BFGS (L-BFGS)** algorithm in PyTorch. The following forces are implemented: `HarmonicBondForce`, `HarmonicAngleForce`, `DihedralForce`, [`LennardJonesForce`](#lennardjonesforce), [`CoulombForce`](#coulombforce).
+Implements a molecular dynamics simulation using the **AMBER** force field and integration of the equations of motion using the **velocity Verlet** algorithm. Energy minimization done using the **Limited-memory BFGS (L-BFGS)** algorithm in PyTorch. The following forces are implemented: [`HarmonicBondForce`](#harmonicbondforce), [`HarmonicAngleForce`](#harmonicangleforce), [`DihedralForce`](#dihedralforce), [`LennardJonesForce`](#lennardjonesforce), [`CoulombForce`](#coulombforce).
 
 <p align="center">
 <img src="https://github.com/oneskovic/molecular_mechanics/blob/main/animations/1cfg-dynamics.gif" alt="Dynamics simulation of the 1cfg protein " width="504" height="684" />
@@ -14,6 +14,11 @@ pip install -r requirements.txt
 ### Run the simulation
 ```
 python -m molecular_mechanics input.pdb output.xyz -t 273
+```
+Example of running the simulation on the 1cfg protein at 300K for 10000 iterations, upto 100 minimization iterations and saving the energy plot to figure.png:
+```
+python -m molecular_mechanics data/proteins/1cfg_h.pdb trajectory.xyz -it 10000 -mit 100 -plt figure.png -t 300 -fast
+
 ```
 The input and output files are required as well as the starting temperature (in kelvins). The only supported input formats are .pdb. Some example pdbs can be found in the data folder.
 Here's a table of all arguments supported by the simulator:
@@ -46,3 +51,6 @@ The force that acts between two atoms that are bonded. For two atoms separated b
 Similar to the HarmonicBondForce, the HarmonicAngleForce acts between three atoms that are bonded. For three atoms separated by angles $\theta$ with parameters $k$, $\theta_0$ the force equals: $k\frac{(\theta - \theta_0)^2}{2}$. The parameters $k$ and $\theta_0$ represent the force strength and the equilibrium angle.
 ### DihedralForce
 The force that acts between four atoms that are bonded. The angle formed between the two planes defined by the first three and the last three atoms is calculated this is $\theta$. The parameters $k$, $\theta_0$ and $n$ represent the force strength, $\theta_0$ is the phase offset and $n$ is the periodicity of the force. The force equals: $k(1 + \cos(n \theta - \theta_0))$.
+# Callbacks
+Can be attached to energy minimization or the dynamics simulation to get the current state of the system. The callbacks are called at the end of each iteration. The callback class should inherit from base Callback. The __call__ function should accept the current iteration and state of the system as an argument. Check callbacks.py for some examples and some existing callbacks.
+ 
