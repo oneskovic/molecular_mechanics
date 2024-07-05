@@ -54,5 +54,5 @@ Similar to the HarmonicBondForce, the HarmonicAngleForce acts between three atom
 The force that acts between four atoms that are bonded. The angle formed between the two planes defined by the first three and the last three atoms is calculated this is $\theta$. The parameters $k$, $\theta_0$ and $n$ represent the force strength, $\theta_0$ is the phase offset and $n$ is the periodicity of the force. The force equals: $k(1 + \cos(n \theta - \theta_0))$.
 
 ## Callbacks
-Can be attached to energy minimization or the dynamics simulation to get the current state of the system. The callbacks are called at the end of each iteration. The callback class should inherit from base `Callback`. The `__call__` function should accept the current iteration and state of the system as an argument. Check [`callbacks.py`](main/molecular_mechanics/callbacks.py) for some examples and some existing callbacks.
+Can be attached to energy minimization or the dynamics simulation to get the current state of the system. The callbacks are called at the end of each iteration. The callback class should inherit from base `Callback`. The `__call__` function should accept the current iteration and state of the system as an argument. Check [`callbacks.py`](molecular_mechanics/callbacks.py) for some examples and some existing callbacks.
  
